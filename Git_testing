@@ -1,3 +1,9 @@
 mkdir my-git-practice                    Folder create using command 
 cd my-git-practice                       directory change 
 echo Git_testing > "git"                 File create using the command "Git_testing means file inside data "git" means file name
+git init                                 Empty folder into git repository 
+git config --global user.name ""         Configure your identity (One-time setup)
+git config --global user.email ""        Configure your identity (One-time setup)
+git status                               check the files status
+git add "file name"                      Only the particular file only will be add
+git add .                                This is means all the fill be added in git 
