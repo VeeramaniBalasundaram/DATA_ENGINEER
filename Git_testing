@@ -1,0 +1,3 @@
+mkdir my-git-practice                    Folder create using command 
+cd my-git-practice                       directory change 
+echo Git_testing > "git"                 File create using the command "Git_testing means file inside data "git" means file name
