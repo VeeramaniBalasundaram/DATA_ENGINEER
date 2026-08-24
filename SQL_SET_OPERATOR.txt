@@ -1060,4 +1060,162 @@ WITH FIRST_DATA AS
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
 
--------------------------------------SUB QUERY---------------------------------------------------------------------------------------------------------
+-------------------------------------SUB QUERY ------------------28-08-2026--------------------------------------------------------------------
+
+
+		SELECT * FROM EMPLOYEES
+		SELECT * FROM DEPARTMENTS
+		
+		SELECT * FROM DEPARTMENTS 
+			WHERE DEPARTMENTID IN 
+		(
+			SELECT DepartmentID FROM EMPLOYEES 
+			WHERE LOCATION = 'CHENNAI'
+		)
+
+
+			SELECT * FROM DEPARTMENTS 
+			WHERE DEPARTMENTID NOT IN 
+		(
+			SELECT DepartmentID FROM EMPLOYEES 
+			WHERE LOCATION IN ('CHENNAI' , 'PUNE' , 'KOCHI')
+		)
+-------------------------------------------------------------------------- GREATER THAN ----------------------------------------------
+			SELECT * FROM DEPARTMENTS 
+			WHERE DEPARTMENTID IN 
+		
+		(
+			SELECT DepartmentID FROM EMPLOYEES 
+			WHERE Salary > 100000
+		)
+------------------------------------------------------------------------------ LESS THAN ---------------------------------------------
+			SELECT * FROM DEPARTMENTS 
+			WHERE DEPARTMENTID IN 
+		
+		(
+			SELECT DepartmentID FROM EMPLOYEES 
+			WHERE Salary < 100000
+		)
+------------------------------------------------------------------------------ BETWEEN -----------------------------------------------
+
+			SELECT * FROM DEPARTMENTS 
+			WHERE DEPARTMENTID IN 
+		
+		(
+			SELECT DepartmentID FROM EMPLOYEES 
+			WHERE Salary BETWEEN 140000 AND 150000
+		)
+------------------------------------------------------------------------------ NOT EQUAL-----------------------------------
+			
+			SELECT * FROM DEPARTMENTS 
+			WHERE DEPARTMENTID IN 
+			(
+				SELECT DepartmentID FROM EMPLOYEES 
+				WHERE LOCATION <> 'CHENNAI' 
+			)
+	
+------------------------------------------------------------------------------ ANY/SOME -------------------------------------------------------
+			
+			SELECT * FROM EMPLOYEES 
+			WHERE SALARY > ANY 
+		
+		(
+			SELECT Salary FROM EMPLOYEES  
+			WHERE EmployeeID = 1018 
+		)
+
+		SELECT * FROM EMPLOYEES 
+			WHERE SALARY <= ANY 
+		
+		(
+			SELECT Salary FROM EMPLOYEES  
+			WHERE EmployeeID = 1070 
+		)
+---------------------------------------------------------------------------SOME ----------------------------------------------------------------------
+            SELECT * FROM EMPLOYEES 
+			WHERE SALARY <= SOME  
+		
+		(
+			SELECT Salary FROM EMPLOYEES  
+			WHERE EmployeeID = 1070 
+		)
+
+		     SELECT * FROM EMPLOYEES 
+			WHERE SALARY >= SOME  
+		
+		(
+			SELECT Salary FROM EMPLOYEES  
+			WHERE EmployeeID = 1070 
+		)
+---------------------------------------------------------------------------ALL ----------------------------------------------------------------------		
+		    SELECT * FROM EMPLOYEES 
+			WHERE SALARY  >=  ALL 
+		
+		(
+			SELECT Salary FROM EMPLOYEES  
+			WHERE EmployeeID = 1070 
+		)
+		
+		   SELECT * FROM EMPLOYEES 
+			WHERE SALARY  <=  ALL 
+		
+		(
+			SELECT Salary FROM EMPLOYEES  
+			WHERE EmployeeID = 1070 
+		)
+---------------------------------------------------------------------- SUB QUERY WITH FROM LOCATION -----------------------------------------------------
+		
+	SELECT * FROM 
+		(	
+			SELECT 
+				CONCAT(FIRSTNAME , LASTNAME) AS NEW_NAME,
+				GENDER,
+				EMAIL,
+				STATUS,
+				PHONE,
+				SALARY ,
+					CASE 
+						WHEN Salary < 50000 THEN 'LOW'
+						WHEN Salary BETWEEN 100000 AND 150000 THEN 'NORMAL'
+						WHEN Salary BETWEEN 150000 AND 200000 THEN 'OK'
+						ELSE 'HIGH'
+					END AS SALARY_TYPE
+			FROM EMPLOYEES
+		) AS DT
+	WHERE SALARY_TYPE = 'HIGH'
+
+	
+	SELECT * FROM 
+			
+		(
+			SELECT 
+				DepartmentID,
+				COUNT(*) AS TOTAL_EMPLOYESS,
+				SUM(SALARY) AS TOTAL_EMP_SALARY
+			FROM EMPLOYEES
+			GROUP BY DepartmentID
+		) AS T
+	WHERE T.TOTAL_EMP_SALARY BETWEEN 200000 AND 300000
+	ORDER BY T.TOTAL_EMP_SALARY DESC 
+	
+	WITH FINAL_DATA	AS 	
+			(	
+				SELECT 
+					CONCAT(FIRSTNAME , LASTNAME) AS NEW_NAME,
+					GENDER,
+					EMAIL,
+					STATUS,
+					PHONE,
+					SALARY ,
+						CASE 
+							WHEN Salary < 50000 THEN 'LOW'
+							WHEN Salary BETWEEN 100000 AND 150000 THEN 'NORMAL'
+							WHEN Salary BETWEEN 150000 AND 200000 THEN 'OK'
+							ELSE 'HIGH'
+						END AS SALARY_TYPE
+				FROM EMPLOYEES
+			)
+	SELECT * FROM FINAL_DATA 
+	WHERE SALARY_TYPE = 'LOW'
+
+	SELECT * FROM EMPLOYEES
