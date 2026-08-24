@@ -1060,7 +1060,7 @@ WITH FIRST_DATA AS
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
 
--------------------------------------SUB QUERY ------------------28-08-2026--------------------------------------------------------------------
+-------------------------------------SUB QUERY ------------------24-08-2026--------------------------------------------------------------------
 
 
 		SELECT * FROM EMPLOYEES
@@ -1218,4 +1218,321 @@ WITH FIRST_DATA AS
 	SELECT * FROM FINAL_DATA 
 	WHERE SALARY_TYPE = 'LOW'
 
-	SELECT * FROM EMPLOYEES
+-----------------------------------------------------------------------------sub query with select location -----------------------------------------------
+	USE TESTING 
+
+	SELECT * FROM EMP_DATA ORDER BY SALARY DESC 
+	
+	SELECT 
+		DEPARTMENT,
+		CONCAT(FIRSTNAME , LASTNAME),
+		UPPER(DEPARTMENT) AS NEW_DEPARTMENT,
+		UPPER(CITY) AS NEW_CITY,
+		UPPER(STATE) AS NEW_STATE,
+		UPPER(COUNTRY) AS NEW_COUNTRY,
+			(SELECT AVG(SALARY) FROM EMP_DATA),
+			(SELECT SUM(SALARY) FROM EMP_DATA),
+			(SELECT MIN(SALARY) FROM EMP_DATA),
+			(SELECT MAX(SALARY) FROM EMP_DATA)
+	FROM EMP_DATA
+	WHERE SALARY > 150000
+--------------------------------------------------------------GROUP BU SUBQUERY ---------------------------------------------
+	SELECT 
+		    DEPARTMENT,
+			(SELECT COUNT(*) FROM EMP_DATA AS TOTAL_EMPLOYEE ),
+			(SELECT AVG(SALARY) FROM EMP_DATA),
+			(SELECT SUM(SALARY) FROM EMP_DATA),
+			(SELECT MIN(SALARY) FROM EMP_DATA),
+			(SELECT MAX(SALARY) FROM EMP_DATA)
+	FROM EMP_DATA
+	WHERE SALARY > 150000
+	GROUP BY DEPARTMENT ;
+
+---------------------------------------------------CONDITIONAL SUBQUERY ---------------------------------------------------------
+WITH FINAL_DATA AS 
+	(
+		SELECT 
+				DEPARTMENT,
+				CASE 
+					WHEN SALARY > 
+						(SELECT AVG(SALARY) FROM EMP_DATA)
+					THEN 'GOOD'
+					ELSE 'BAD'
+					END AS NEW_DATA,
+				CASE 
+					WHEN BONUS >
+						(SELECT AVG(BONUS) FROM EMP_DATA)
+					THEN 'OK'
+					ELSE 'NOT_OK'
+					END AS NEW_DATA_1	
+		FROM EMP_DATA
+	)
+SELECT * FROM FINAL_DATA 
+WHERE NEW_DATA = 'GOOD' AND NEW_DATA_1 = 'OK'
+
+
+-----------------------------------------------correlatted cub query topics -----------------------------------------------------------------
+
+SELECT * FROM EMPLOYEES_SUBQUERY ORDER BY SALARY DESC 
+SELECT * FROM DEPARTMENTS_SUBQUERY 
+SELECT * FROM EMPLOYEE_PROJECTS_SUBQUERY
+SELECT * FROM PROJECTS_SUBQUERY
+
+	SELECT 
+		CONCAT_WS('_' , ES.FIRSTNAME , ES.LASTNAME) ,
+			CASE
+				WHEN ES.GENDER = 'M' THEN 'MALE'
+				WHEN ES.GENDER = 'F' THEN 'FEMALE'
+			END AS NEW_GENDER,
+		ES.SALARY,
+		ES.LOCATION
+	FROM EMPLOYEES_SUBQUERY ES
+	WHERE SALARY > 
+		(	
+			SELECT 
+				AVG(ES2.SALARY) AS TOTAL_SALARY
+			FROM EMPLOYEES_SUBQUERY ES2
+			WHERE ES.DEPARTMENTID = ES2.DEPARTMENTID
+		)
+
+
+	SELECT 
+		CONCAT_WS('_' , ES.FIRSTNAME , ES.LASTNAME) ,
+			CASE
+				WHEN ES.GENDER = 'M' THEN 'MALE'
+				WHEN ES.GENDER = 'F' THEN 'FEMALE'
+			END AS NEW_GENDER,
+		ES.SALARY,
+		ES.LOCATION
+	FROM EMPLOYEES_SUBQUERY ES
+	WHERE SALARY <
+		(	
+			SELECT 
+				SUM(ES2.BONUS) AS TOTAL_SALARY
+			FROM EMPLOYEES_SUBQUERY ES2
+			WHERE ES.DEPARTMENTID = ES2.DEPARTMENTID
+		)
+
+		--------------------------------Find employees who are the only employee in their department-----------------------------------------
+	SELECT 
+		FIRSTNAME,
+		LASTNAME,
+		LOCATION,
+		GENDER 
+	FROM EMPLOYEES_SUBQUERY ES 
+	WHERE 
+		(
+			SELECT COUNT(*) AS TOTAL_EMPLOYEES
+			FROM EMPLOYEES_SUBQUERY ES2 
+			WHERE ES.DepartmentID = ES2.DepartmentID
+		) > 1 ; 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+	SELECT 
+		FIRSTNAME,
+		LASTNAME,
+		LOCATION,
+		GENDER 
+	FROM EMPLOYEES_SUBQUERY ES 
+	WHERE ES.SALARY <= 
+		(
+			SELECT SUM(SALARY)
+			FROM EMPLOYEES_SUBQUERY ES2 
+			WHERE ES.DepartmentID = ES2.DepartmentID
+		) 
+
+---------------------------------------------------Find employees earning the highest salary in their department-----------------------------------------------
+	SELECT 
+		FIRSTNAME,
+		LASTNAME,
+		LOCATION,
+		GENDER 
+	FROM EMPLOYEES_SUBQUERY ES 
+	WHERE ES.SALARY =
+		(
+			SELECT MAX(SALARY)
+			FROM EMPLOYEES_SUBQUERY ES2 
+			WHERE ES.DepartmentID = ES2.DepartmentID
+		) 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+		SELECT 
+		FIRSTNAME,
+		LASTNAME,
+		LOCATION,
+		GENDER 
+	FROM EMPLOYEES_SUBQUERY ES 
+	WHERE ES.SALARY =
+		(
+			SELECT MIN(SALARY)
+			FROM EMPLOYEES_SUBQUERY ES2 
+			WHERE ES.DepartmentID = ES2.DepartmentID
+		) 
+-----------------------------------------------------------------------------REVISION FOR SINGLE ROW SUB QUERY---------------------------------------------
+
+	SELECT 
+		DepartmentID,
+		Salary
+	FROM EMPLOYEES_SUBQUERY 
+	WHERE SALARY >
+			(
+				SELECT AVG(SALARY) FROM EMPLOYEES_SUBQUERY
+			)
+	SELECT
+		DEPARTMENTID ,
+		SALARY,
+		FIRSTNAME,
+		LASTNAME
+	FROM EMPLOYEES_SUBQUERY
+	WHERE SALARY <
+			(
+				SELECT SUM(BONUS) FROM EMPLOYEES_SUBQUERY
+			)
+	SELECT
+		DEPARTMENTID ,
+		SALARY,
+		FIRSTNAME,
+		LASTNAME
+	FROM EMPLOYEES_SUBQUERY
+	WHERE SALARY >
+			(
+				SELECT MIN(BONUS) FROM EMPLOYEES_SUBQUERY
+			)
+	SELECT
+		DEPARTMENTID ,
+		SALARY,
+		FIRSTNAME,
+		LASTNAME
+	FROM EMPLOYEES_SUBQUERY
+	WHERE SALARY >
+			(
+				SELECT MAX(BONUS) FROM EMPLOYEES_SUBQUERY
+			)
+
+-----------------------------------------------------------------------------MULTI ROW SUB QUERY --------------------------------------------
+
+		SELECT 
+			DEPARTMENTID,
+			SALARY,
+			FIRSTNAME,
+			LASTNAME,
+			GENDER,
+			AGE
+		FROM EMPLOYEES_SUBQUERY
+		WHERE DepartmentID IN  --------------- IN USED FOR MULTIPLE ROWS DATA ----------------IN MENAS ONLY PARTICULAR CITY---------------------------
+	(
+		SELECT 
+			DEPARTMENTID
+		FROM EMPLOYEES_SUBQUERY
+		WHERE LOCATION IN ( 'CHENNAI' , 'PUNE')
+	)
+	
+	SELECT 
+			DEPARTMENTID,
+			SALARY,
+			FIRSTNAME,
+			LASTNAME,
+			GENDER,
+			AGE
+		FROM EMPLOYEES_SUBQUERY
+		WHERE DepartmentID NOT IN  --------------- NOT IN USED FOR MULTIPLE ROWS DATA ----------------------- NOT IN USED FOR EXCPT THAT CITY --------------
+	(
+		SELECT 
+			DEPARTMENTID
+		FROM EMPLOYEES_SUBQUERY
+		WHERE LOCATION IN ( 'CHENNAI' , 'PUNE')
+	)
+
+		SELECT 
+			EmployeeID,
+			SALARY,
+			FIRSTNAME,
+			LASTNAME,
+			AGE,
+			GENDER FROM EMPLOYEES_SUBQUERY
+		WHERE SALARY > ANY ------------------------------------------ANY IS USED Condition must be true for at least one value returned by the subquery--------------
+	(
+		SELECT SALARY
+		FROM EMPLOYEES_SUBQUERY
+		WHERE EmployeeID = 1099
+	)
+
+	SELECT 
+			EmployeeID,
+			SALARY,
+			FIRSTNAME,
+			LASTNAME,
+			AGE,
+			GENDER FROM EMPLOYEES_SUBQUERY
+		WHERE SALARY < SOME ------------------------------------------SOME  IS USED Condition must be true for at least one value returned by the subquery--------------
+	(	
+		SELECT SALARY
+		FROM EMPLOYEES_SUBQUERY
+		WHERE EmployeeID = 1099
+	)
+	---------------------BOTH SOME AND ANY IS SAME LOGIC ONLY /////Condition must be true for at least one value returned by the subquery===================
+	SELECT 
+			EmployeeID,
+			SALARY,
+			FIRSTNAME,
+			LASTNAME,
+			AGE,
+			GENDER FROM EMPLOYEES_SUBQUERY
+		WHERE SALARY < ALL -------------------------Condition must be true for every value returned by the subquery-----------------------------
+	(	
+		SELECT SALARY
+		FROM EMPLOYEES_SUBQUERY
+		WHERE EmployeeID = 1099
+	)
+
+---------------=====================================================FROM SUBQUERY==========================================--------------------------
+
+	SELECT *
+		FROM 
+			(
+				SELECT
+				UPPER(CONCAT(FIRSTNAME , LASTNAME)) AS NEW_NAME,
+				CASE 
+						WHEN GENDER = 'M' THEN 'MALE'
+						WHEN GENDER = 'F' THEN 'FEMALE'
+				END AS NEW_GENDER,
+				YEAR(HIREDATE)AS NEW_YEAR
+				FROM EMPLOYEES_SUBQUERY
+			)AS S
+	WHERE NEW_GENDER = 'FEMALE'
+		
+	
+	SELECT * FROM 
+			(
+				SELECT 
+					UPPER(CONCAT(FIRSTNAME , LASTNAME)) AS NEW_NAME,
+					CASE 
+						WHEN SALARY < 100000 THEN 'NOTOK'
+						WHEN SALARY BETWEEN 100000 AND 200000 THEN 'OK'
+						ELSE 'HIGH'
+					END AS NEW_SALARY,
+					CASE 
+						WHEN GENDER = 'F' THEN 'FEMALE'
+						WHEN GENDER = 'M' THEN 'MALE'
+					END AS NEW_GENDER,
+					YEAR (HIREDATE) AS NEW_YEAR,
+					SUBSTRING(EMAIL , 0 , 10) AS NEW_MAIL_ID
+					FROM EMPLOYEES_SUBQUERY
+			) AS NEW
+	WHERE NEW_SALARY = 'OK'
+
+	---------------=====================================================SELECT  SUBQUERY==========================================--------------------------		
+	SELECT 
+		UPPER(FIRSTNAME) AS NEW_NAME,
+		UPPER(LASTNAME) AS  NEW_LAST_NAME,
+		SALARY,
+		LOCATION,
+				(SELECT SUM(SALARY) AS SUM_SALARY FROM EMPLOYEES_SUBQUERY ),
+				(SELECT AVG(SALARY) AS AVG_SALARY FROM EMPLOYEES_SUBQUERY ),
+				(SELECT MIN(SALARY) AS MIN_SALARY FROM EMPLOYEES_SUBQUERY ),
+				(SELECT MAX(SALARY) AS  MAX_SALARY FROM EMPLOYEES_SUBQUERY ),
+				(SELECT COUNT(*)  AS TOTAL_EMPLOYEE FROM EMPLOYEES_SUBQUERY )
+	FROM EMPLOYEES_SUBQUERY
+	WHERE Location = 'CHENNAI'
+
+
+
+	SELECT * FROM EMPLOYEES_SUBQUERY ORDER BY SALARY DESC 
