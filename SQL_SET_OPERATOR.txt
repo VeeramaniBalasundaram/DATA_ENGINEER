@@ -1531,8 +1531,364 @@ SELECT * FROM PROJECTS_SUBQUERY
 				(SELECT MAX(SALARY) AS  MAX_SALARY FROM EMPLOYEES_SUBQUERY ),
 				(SELECT COUNT(*)  AS TOTAL_EMPLOYEE FROM EMPLOYEES_SUBQUERY )
 	FROM EMPLOYEES_SUBQUERY
-	WHERE Location = 'CHENNAI'
+	WHERE Location = 'CHENNAI';
+
+------------------------------------------------------------------- 25-08-2026---------------------------------------------------------------------------------
+SELECT
+		UPPER(CONCAT(FIRSTNAME, LASTNAME)) AS NEW_NAME,
+		CASE
+			WHEN GENDER = 'F' THEN 'FEMALE'
+			WHEN GENDER = 'M' THEN 'MALE'
+		END AS NEW_GENDER,
+		CASE
+			WHEN DEPARTMENTID < 20 THEN 'OLD'
+			WHEN DEPARTMENTID BETWEEN 20 AND 40 THEN 'NORMAL'
+			ELSE 'NEW'
+		END AS NEW_DEPARTMENTID,
+		(
+			SELECT AVG(SALARY)
+			FROM EMPLOYEES_SUBQUERY
+		) AS AVG_SALARY,
+
+		(
+			SELECT SUM(SALARY)
+			FROM EMPLOYEES_SUBQUERY
+		) AS SUM_SALARY,
+		(
+			SELECT MIN(SALARY)
+			FROM EMPLOYEES_SUBQUERY
+		) AS MIN_SALARY,
+
+		(
+			SELECT MAX(SALARY)
+			FROM EMPLOYEES_SUBQUERY
+		) AS MAX_SALARY , 
+
+		SALARY - (SELECT AVG(SALARY) FROM EMPLOYEES_SUBQUERY) AS DETECTION_SALARY , 
+
+		CASE 
+				WHEN SALARY > 
+					(SELECT MIN(SALARY) FROM EMPLOYEES_SUBQUERY) THEN 'OK'
+				ELSE'NOTOK' 
+		END NEW_SALARY_DETAILS,
+		DATEDIFF (YEAR , HireDate , GETDATE()) AS DIFFERENCE_YEAR
+  
+FROM EMPLOYEES_SUBQUERY;
 
 
+------------------------------------------------------------------------------------------NSESTED SUBQUERY LOGICS ----------------------------------------------------------------------------------
+-------------Find employees who work in departments located in Chennai.-----------------------------------
+ 
+	SELECT * FROM EMPLOYEES_SUBQUERY WHERE DEPARTMENTID IN 
+		(SELECT DEPARTMENTID  FROM DEPARTMENTS WHERE Location = 'CHENNAI')
 
+--------------------Find employees whose salary is greater than the average salary of employees working in Chennai departments.---------------------------------------
+
+	SELECT * FROM EMPLOYEES_SUBQUERY WHERE Salary >  
+		(
+			SELECT AVG(Salary) FROM EMPLOYEES_SUBQUERY WHERE DepartmentID IN 
+				(SELECT DepartmentID FROM DEPARTMENTS WHERE LOCATION IN ('CHENNAI' , 'PUNE'))
+		)
+	
+	SELECT * FROM EMPLOYEES_SUBQUERY WHERE Salary >  
+		(
+			SELECT MIN(Salary) FROM EMPLOYEES_SUBQUERY WHERE DepartmentID IN 
+				(SELECT DepartmentID FROM DEPARTMENTS WHERE LOCATION IN ('CHENNAI' , 'PUNE'))
+		)
+
+	SELECT * FROM EMPLOYEES_SUBQUERY WHERE Salary >  
+		(
+			SELECT MAX(Salary) FROM EMPLOYEES_SUBQUERY WHERE DepartmentID IN 
+				(SELECT DepartmentID FROM DEPARTMENTS WHERE LOCATION IN ('CHENNAI' , 'PUNE'))
+		)
+
+	SELECT * FROM EMPLOYEES_SUBQUERY WHERE Salary < 
+		(
+			SELECT SUM(Salary) FROM EMPLOYEES_SUBQUERY WHERE DepartmentID IN 
+				(SELECT DepartmentID FROM DEPARTMENTS WHERE LOCATION IN ('CHENNAI' , 'PUNE'))
+		)
+--------------------------Find employees working in departments that have employees, where those departments are located in Chennai.------------------------------------------------
+	SELECT * FROM EMPLOYEES_SUBQUERY WHERE DEPARTMENTID IN 
+		(	
+			SELECT DEPARTMENTID FROM EMPLOYEES_SUBQUERY GROUP BY DEPARTMENTID HAVING  COUNT(*) >= 1 AND DEPARTMENTID IN 
+				(SELECT DEPARTMENTID  FROM DEPARTMENTS WHERE Location = 'CHENNAI')
+		)
+
+	
+	SELECT * FROM EMPLOYEES_SUBQUERY WHERE Salary >  
+		(
+			SELECT AVG(Salary) FROM EMPLOYEES_SUBQUERY WHERE DepartmentID IN 
+				(
+					SELECT DepartmentID FROM DEPARTMENTS WHERE LOCATION IN ('CHENNAI' , 'PUNE') AND DEPARTMENTID IN 
+						(
+							SELECT DEPARTMENTID FROM PROJECTS_SUBQUERY WHERE Status = 'COMPLETED' AND ProjectID IN 
+								(
+									SELECT ProjectID FROM EMPLOYEE_PROJECTS_SUBQUERY WHERE Role IN ('DATA ENGINEER' , 'ANALYST' , 'MANAGER' , 'TESTER' , 'MANAGER') AND ProjectID IN 
+										(
+											SELECT ProjectID FROM EMPLOYEE_PROJECTS_SUBQUERY WHERE StartDate BETWEEN '2024-01-01' AND '2025-01-01'
+										)
+								)
+						)
+				)
+		);
+
+
+ (
+	SELECT * FROM 	
+	(
+		SELECT 
+			FIRSTNAME,
+			LASTNAME,
+			SALARY,
+				CASE 
+					WHEN SALARY > 
+						(
+							SELECT AVG(SALARY) FROM EMPLOYEES_SUBQUERY WHERE DepartmentID IN 
+								(
+									SELECT DepartmentID FROM DEPARTMENTS WHERE LOCATION IN ('CHENNAI' , 'PUNE')
+								)
+						)
+
+					THEN 'OK'
+					ELSE'NOTOK'
+				END AS NEW_LOGIC
+		FROM EMPLOYEES_SUBQUERY
+	) T
+	WHERE NEW_LOGIC = 'NOTOK' ) 
+
+	
+	SELECT 
+			FIRSTNAME,
+			LASTNAME,
+			SALARY,
+				CASE 
+					WHEN SALARY > 
+						(
+							SELECT AVG(SALARY) FROM EMPLOYEES_SUBQUERY WHERE DepartmentID IN 
+								(
+									SELECT DepartmentID FROM DEPARTMENTS WHERE LOCATION IN ('CHENNAI' , 'PUNE')
+								)
+						)
+					THEN 'OK'
+					ELSE'NOTOK'
+				END AS NEW_LOGIC,
+				CASE 
+					WHEN Bonus > 
+						(
+							SELECT AVG(Bonus) FROM EMPLOYEES_SUBQUERY WHERE DepartmentID IN 
+								(
+									SELECT DepartmentID FROM DEPARTMENTS WHERE LOCATION IN ('CHENNAI' , 'PUNE')
+								)
+						)
+					THEN 'BONUS_OK'
+					ELSE'BONUS_NOT_OK'
+				END AS NEW_LOGIC
+		FROM EMPLOYEES_SUBQUERY
+	
+-------------===================================================correlated Sub Query=======================================================--------------------------------------------------------------------
+
+	SELECT 
+			UPPER(ES.FIRSTNAME) AS NEW_NAME,
+			UPPER(ES.LASTNAME) AS NEW_LAST_NAME,
+			ES.SALARY
+			FROM EMPLOYEES_SUBQUERY ES 
+			WHERE ES.Salary > 
+				(
+					SELECT AVG(SALARY) FROM EMPLOYEES_SUBQUERY ES2 ---------------------------------- CORRELATED SUB QUERY WILL RUN BASED ON OUTER QUERY-----------------------------------------
+					WHERE ES2.DepartmentID = ES.DepartmentID 
+				)
+
+
+		SELECT 
+			UPPER(ES.FIRSTNAME) AS NEW_NAME,
+			UPPER(ES.LASTNAME) AS NEW_LAST_NAME,
+			ES.SALARY
+			FROM EMPLOYEES_SUBQUERY ES 
+			WHERE ES.Salary < 
+				(
+					SELECT MAX(SALARY) FROM EMPLOYEES_SUBQUERY ES2 ---------------------------------- CORRELATED SUB QUERY WILL RUN BASED ON OUTER QUERY-----------------------------------------
+					WHERE ES2.DepartmentID = ES.DepartmentID 
+				)
+
+
+		SELECT 
+			UPPER(ES.FIRSTNAME) AS NEW_NAME,
+			UPPER(ES.LASTNAME) AS NEW_LAST_NAME,
+			ES.SALARY
+			FROM EMPLOYEES_SUBQUERY ES 
+			WHERE ES.Salary > 
+				(
+					SELECT MIN(SALARY) FROM EMPLOYEES_SUBQUERY ES2 ---------------------------------- CORRELATED SUB QUERY WILL RUN BASED ON OUTER QUERY-----------------------------------------
+					WHERE ES2.DepartmentID = ES.DepartmentID 
+				)
+
+		
+		SELECT 
+			UPPER(ES.FIRSTNAME) AS NEW_NAME,
+			UPPER(ES.LASTNAME) AS NEW_LAST_NAME,
+			ES.SALARY
+			FROM EMPLOYEES_SUBQUERY ES 
+			WHERE
+				(
+					SELECT COUNT(*) FROM EMPLOYEES_SUBQUERY ES2 ---------------------------------- CORRELATED SUB QUERY WILL RUN BASED ON OUTER QUERY-----------------------------------------
+					WHERE ES2.DepartmentID = ES.DepartmentID 
+				) > 1
+
+--------------------------------------------------------------------------------------------	Correlated Subqueries WITH CASE -----------------------------------------------------------------------------------------
+	SELECT 
+			UPPER(ES.FIRSTNAME) AS NEW_NAME,
+			UPPER(ES.LASTNAME) AS NEW_LAST_NAME,
+			ES.SALARY,
+			CASE 
+				WHEN SALARY > 
+					(
+						SELECT AVG(SALARY) 
+						FROM EMPLOYEES_SUBQUERY AS ES2 
+						WHERE ES2.DepartmentID = ES.DepartmentID
+					)
+				THEN 'ABOVE_DEPARTMENT_SALARY' 
+				WHEN SALARY = 
+					(
+						SELECT AVG(SALARY) 
+						FROM EMPLOYEES_SUBQUERY AS ES2 
+						WHERE ES2.DepartmentID = ES.DepartmentID
+					)
+				THEN 'EQUAL' 
+				ELSE 'NOT_EQUAL'
+			END AS NEW_LOGIC,
+
+			CASE 
+				WHEN SALARY > 
+					(
+						SELECT MAX(SALARY) 
+						FROM EMPLOYEES_SUBQUERY AS ES2 
+						WHERE ES2.DepartmentID = ES.DepartmentID
+					)
+				THEN 'OK' 
+				WHEN SALARY = 
+					(
+						SELECT MAX(SALARY) 
+						FROM EMPLOYEES_SUBQUERY AS ES2 
+						WHERE ES2.DepartmentID = ES.DepartmentID
+					)
+				THEN 'TK' 
+				ELSE 'PK'
+			END AS NEW_LOGIC,
+
+			CASE 
+				WHEN SALARY > 
+					(
+						SELECT MIN(SALARY) 
+						FROM EMPLOYEES_SUBQUERY AS ES2 
+						WHERE ES2.DepartmentID = ES.DepartmentID
+					)
+				THEN 'MIN_OK' 
+				WHEN SALARY = 
+					(
+						SELECT MIN(SALARY) 
+						FROM EMPLOYEES_SUBQUERY AS ES2 
+						WHERE ES2.DepartmentID = ES.DepartmentID
+					)
+				THEN 'MIN_NOT' 
+				ELSE 'HIGH'
+			END AS NEW_LOGIC	
+	FROM EMPLOYEES_SUBQUERY ES 
+---------------------------------------------------------------------------------------------------Multiple Correlated Subqueries-----------------------------------------------------------------------			
+	SELECT 
+		LOCATION,
+		UPPER(ES.FIRSTNAME) AS NEW_NAME,
+		UPPER(ES.LASTNAME) AS NEW_LAST_NAME,
+		ES.SALARY,
+		ES.AGE,
+			(
+				SELECT  AVG(SALARY) FROM EMPLOYEES_SUBQUERY ES2
+				WHERE ES2.DepartmentID = ES.DEPARTMENTID
+			) AS DEPARTMENT_AVG_SALARY ,
+			(
+				SELECT SUM(SALARY) FROM EMPLOYEES_SUBQUERY ES2
+				WHERE ES2.DepartmentID = ES.DEPARTMENTID
+			) AS DEPARTMENT_SUM_SALARY ,
+			(
+				SELECT MIN(SALARY) FROM EMPLOYEES_SUBQUERY ES2
+				WHERE ES2.DepartmentID = ES.DEPARTMENTID
+			) AS DEPARTMENT_MIN_SALARY ,
+			(
+				SELECT MAX(SALARY) FROM EMPLOYEES_SUBQUERY ES2
+				WHERE ES2.DepartmentID = ES.DEPARTMENTID
+			) AS DEPARTMENT_MAX_SALARY ,
+			(
+				SELECT COUNT(*) FROM EMPLOYEES_SUBQUERY ES2
+				WHERE ES2.DepartmentID = ES.DEPARTMENTID
+			) AS DEPARTMENT_MAX_SALARY 
+
+	FROM EMPLOYEES_SUBQUERY ES 
+	
+-----------------------------------------------------------------------------------------Multiple Correlated Subqueries + CASE------------------------------------------------------------------------------
+ SELECT * FROM 
+
+ (SELECT 
+		LOCATION,
+		UPPER(ES.FIRSTNAME) AS NEW_NAME,
+		UPPER(ES.LASTNAME) AS NEW_LAST_NAME,
+		ES.SALARY,
+		ES.AGE,
+			(
+				SELECT  AVG(SALARY) FROM EMPLOYEES_SUBQUERY ES2
+				WHERE ES2.DepartmentID = ES.DEPARTMENTID
+			) AS DEPARTMENT_AVG_SALARY ,
+			(
+				SELECT SUM(SALARY) FROM EMPLOYEES_SUBQUERY ES2
+				WHERE ES2.DepartmentID = ES.DEPARTMENTID
+			) AS DEPARTMENT_SUM_SALARY ,
+			(
+				SELECT MIN(SALARY) FROM EMPLOYEES_SUBQUERY ES2
+				WHERE ES2.DepartmentID = ES.DEPARTMENTID
+			) AS DEPARTMENT_MIN_SALARY ,
+
+		CASE 
+			WHEN SALARY >
+				(
+					 SELECT AVG(SALARY) FROM EMPLOYEES_SUBQUERY AS ES2
+					 WHERE ES2.DEPARTMENTID = ES.DEPARTMENTID
+				)
+			THEN 'OK'
+			ELSE 'NOT_OK'
+		END AS AVG_NEW_SALARY,
+		CASE 
+			WHEN SALARY >
+				(
+					 SELECT AVG(SALARY) FROM EMPLOYEES_SUBQUERY AS ES2
+					 WHERE ES2.DEPARTMENTID = ES.DEPARTMENTID
+				)
+			THEN 'VEERAMANI'
+			WHEN SALARY = 
+				(
+					SELECT AVG(SALARY) FROM EMPLOYEES_SUBQUERY AS ES2
+					WHERE ES2.DEPARTMENTID = ES.DEPARTMENTID
+				)
+			THEN 'EUQAL_AVERAGE'
+			ELSE 'NOT_QUAL'
+		END AS NEW_LOGICS,
+		CASE 
+			WHEN SALARY >
+				(
+					 SELECT MIN(SALARY) FROM EMPLOYEES_SUBQUERY AS ES2
+					 WHERE ES2.DEPARTMENTID = ES.DEPARTMENTID
+				)
+			THEN 'MIN_SALARY'
+			WHEN SALARY = 
+				(
+					SELECT MIN(SALARY) FROM EMPLOYEES_SUBQUERY AS ES2
+					WHERE ES2.DEPARTMENTID = ES.DEPARTMENTID
+				)
+			THEN 'CHECKINH'
+			ELSE 'SALARY_OK'
+		END AS MIN_SALARY_CHECKING
+	FROM EMPLOYEES_SUBQUERY ES ) T
+	WHERE T.AVG_NEW_SALARY = 'OK'
+	
+	
 	SELECT * FROM EMPLOYEES_SUBQUERY ORDER BY SALARY DESC 
+	SELECT * FROM DEPARTMENTS_SUBQUERY
+	SELECT * FROM EMPLOYEE_PROJECTS_SUBQUERY
+	SELECT * FROM PROJECTS_SUBQUERY
