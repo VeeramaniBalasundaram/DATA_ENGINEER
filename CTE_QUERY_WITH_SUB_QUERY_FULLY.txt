@@ -1,0 +1,921 @@
+----------------------------------------------CTE ---- COMMON TABLE EXPRESSION ----------------------------------------------
+----- WHAT IS CTE --- IT IS COMMON TABLE EXPRESSION ------
+----A CTE is a named temporary result set that you define using WITH and then use in the query immediately following it.------------------------
+ 
+ WITH FIRST_DATA AS 
+ (
+	SELECT	
+		UPPER(FIRSTNAME) AS NEW_NAME,
+		UPPER(LASTNAME) AS LAST_NAME,
+		UPPER(CONCAT(FIRSTNAME , LASTNAME)) AS FULL_NAME,
+		CASE 
+			WHEN GENDER = 'F' THEN 'FEMALE'
+			WHEN GENDER = 'M' THEN 'MALE'
+		END AS NEW_GENDER_NAME,
+		CASE 
+			WHEN SALARY < 70000 THEN 'LOW'
+			WHEN SALARY BETWEEN 70000  AND 100000 THEN 'MEDIUM'
+			ELSE 'HIGH'
+		END AS NEW_SALARY,
+		CASE 
+			WHEN BONUS < 20000 THEN 'LOW'
+			WHEN BONUS BETWEEN 20000  AND 40000 THEN 'MEDIUM'
+			ELSE 'HIGH'
+		END AS NEW_BONUS,
+		YEAR(HIREDATE) AS ONLY_YEAR,
+		LOCATION,
+		AGE 
+	FROM EMPLOYEES_SUBQUERY
+)
+SELECT * FROM FIRST_DATA  WHERE NEW_SALARY = 'MEDIUM'
+
+
+-------------------------------------------------------------------------------------------26-08-2026---------------------------------------------------------------------------------------------------
+-----------------------------------------------------------CTE WITH WHERE CONDITION LOGICS--------------------------------------------------------------------------
+ WITH FIRST_DATA AS 
+ (
+	SELECT	
+		UPPER(FIRSTNAME) AS NEW_NAME,
+		UPPER(LASTNAME) AS LAST_NAME,
+		UPPER(CONCAT(FIRSTNAME , LASTNAME)) AS FULL_NAME,
+		CASE 
+			WHEN GENDER = 'F' THEN 'FEMALE'
+			WHEN GENDER = 'M' THEN 'MALE'
+		END AS NEW_GENDER_NAME,
+		CASE 
+			WHEN SALARY < 70000 THEN 'LOW'
+			WHEN SALARY BETWEEN 70000  AND 100000 THEN 'MEDIUM'
+			ELSE 'HIGH'
+		END AS NEW_SALARY,
+		CASE 
+			WHEN BONUS < 20000 THEN 'LOW'
+			WHEN BONUS BETWEEN 20000  AND 40000 THEN 'MEDIUM'
+			ELSE 'HIGH'
+		END AS NEW_BONUS,
+		YEAR(HIREDATE) AS ONLY_YEAR,
+		LOCATION,
+		AGE 
+	FROM EMPLOYEES_SUBQUERY
+	WHERE Location = 'CHENNAI'
+)
+SELECT * FROM FIRST_DATA  WHERE NEW_SALARY = 'MEDIUM';
+
+-----------------------------------------------------------CTE WITH SELECTED COLUMNS --------------------------------------------------------------------------
+
+WITH DATA_CHECKING AS 	
+(	SELECT 
+		UPPER(FIRSTNAME) AS NEW_NAME,
+		UPPER(LASTNAME) AS NEW_LAST_NAME,
+		GENDER,
+		DEPARTMENT,
+		CITY,
+		STATE,
+		SALARY,
+		HIREDATE,
+		BONUS,
+		AGE,
+		STATUS
+	FROM EMP_DATA
+)
+SELECT * FROM DATA_CHECKING ;
+
+-----------------------------------------------------------CTE WITH SELECTED COLUMNS --------------------------------------------------------------------------
+WITH CAL_COLUMN AS 
+(
+	SELECT 
+		UPPER(CONCAT_WS('_' ,FIRSTNAME , LASTNAME)) AS NEW_NAME,
+		CHOOSE(CHARINDEX(GENDER , 'MF'), 'MALE' , 'FEMALE') AS NEW_GENDER_DIFFERENT_FORMAT,--------------------WIHTOUT CASE I USED CHOOSE AND CHAIRINDEX FOR CONDITION 
+		IIF (GENDER = 'M', 'MALE' , 'FEMALE') NEW_IF_TYPE,-----------------------------------------------WITHOUT CASE I USED IIF CONDITION FOR THIS SECTIONS
+		TRIM(DEPARTMENT) AS SAPCE_REMOVED_DEPARTMENT,
+		TRIM(CITY) AS NEW_CITY,
+		TRIM(STATE) AS NEW_STATE,
+		YEAR(HIREDATE) AS YEAR_ONLY,
+		SALARY + 10000 AS NEW_INCREMENT_SALARY,
+		SALARY - 10000 AS NEW_DECREMENT_SALARY,
+		SALARY + BONUS AS NEW_SALARY_BONUS,
+		SALARY / 10 AS DIVIDED_SALARY,
+		SALARY * 2 AS MULTIPLE_SALARY,
+		SALARY % 100 AS MODULE_SALARY
+		FROM EMP_DATA
+)
+SELECT * FROM CAL_COLUMN WHERE NEW_CITY = 'CHENNAI'	
+(
+	SELECT 
+		DEPARTMENT,
+		COUNT(*) AS TOTAL_EMPLOYEE,
+		SUM(SALARY) AS TOTAL_SALARY,
+		AVG(SALARY) AS AVG_SALARY,
+		MIN(SALARY) AS MIN_SALARY,
+		MAX(SALARY) AS MAX_SALARY
+		FROM EMP_DATA
+-----------------------------------------------------------CTE + GROUP BY CHECKING --------------------------------------------------------------------------
+WITH GROUPBY_SUMMARY AS 
+(
+	SELECT 
+		DEPARTMENT,
+		COUNT(*) AS TOTAL_EMPLOYEE,
+		SUM(SALARY) AS TOTAL_SALARY,
+		AVG(SALARY) AS AVG_SALARY,
+		MIN(SALARY) AS MIN_SALARY,
+		MAX(SALARY) AS MAX_SALARY
+		FROM EMP_DATA
+		GROUP BY DEPARTMENT
+)
+SELECT * FROM GROUPBY_SUMMARY;
+
+-----------------------------------------------------------CTE + GROUP BY CHECKING + HAVING CHECKING  --------------------------------------------------------------------------
+WITH HAVING_CHECKING AS 
+
+		GROUP BY DEPARTMENT
+		HAVING MAX(SALARY) < 150000 AND DEPARTMENT IN ('IT' , 'HR' , 'QA')
+)
+SELECT * FROM HAVING_CHECKING;
+
+-----------------------------------------------------------Multiple CTE's cHEKING   --------------------------------------------------------------------------
+--------------------------THIS IS CALLLED AS CTE CHAINING -------------------------------------------
+WITH 
+	MULTIPLE_1 AS 
+		(
+			SELECT  * FROM EMPLOYEES 
+			WHERE STATUS = 'ACTIVE'
+		),
+
+	MULTIPLE_2 AS 
+		(
+			SELECT  * FROM EMPLOYEES_SUBQUERY 
+			WHERE LOCATION  IN ('CHENNAI' , 'PUNE')
+			AND GENDER = 'M'
+		),
+	MULTIPLE_3 AS 
+		(
+			SELECT  * FROM EMP_DATA 
+			WHERE City  IN ('CHENNAI' , 'PUNE')
+			AND GENDER = 'M'
+			AND STATUS = 'ACTIVE'
+		),
+	MULTIPLE_4 AS 
+		(
+			SELECT  * FROM EMPLOYEE_PROJECTS_SUBQUERY 
+			WHERE ROLE  IN ('TESTER' , 'ANALYST')
+		),
+	MULTIPLE_5 AS 
+		(
+			SELECT 
+				DEPARTMENT,
+				COUNT(*) AS TOTAL_EMPLOYEE,
+				SUM(SALARY) AS TOTAL_SALARY,
+				AVG(SALARY) AS AVG_SALARY,
+				MIN(SALARY) AS MIN_SALARY,
+				MAX(SALARY) AS MAX_SALARY
+				FROM EMP_DATA
+				GROUP BY DEPARTMENT
+				HAVING MAX(SALARY) < 150000 AND DEPARTMENT IN ('IT' , 'HR' , 'QA')	
+		),
+	MULTIPLE_6 AS 
+		(
+			SELECT  * FROM SOUTH_EMPLOYEES_SETOPERATOR 
+			WHERE Department  IN ('IT' , 'R&D')
+		)
+SELECT * FROM MULTIPLE_6 ;
+
+
+--------------------------------------------------------CTE + JOIN-----------------------------------------
+--------------------------------------------------------Very important for Data Engineering.-----------------------------------------
+WITH JOIN_TESTING AS 
+	(
+		SELECT * FROM EMPLOYEES 
+		WHERE STATUS = 'ACTIVE' 
+	)
+					SELECT 
+					UPPER(CONCAT_WS('_' , EP.FIRSTNAME , EP.LASTNAME)) AS NEW_NAME,
+					CHOOSE(CHARINDEX(EP.GENDER , 'MF') , 'MALE' , 'FEMALE') AS NEW_GENDER,
+					YEAR(EP.DATEOFBIRTH) AS YEAR_ONLY,
+					YEAR(EP.HIREDATE) AS YEAR_HIREDATE,
+					EP.SALARY,
+					EP.BONUS,
+					EP.STATUS,
+					DP.DEPARTMENTNAME,
+					DP.LOCATION,
+					YEAR(DP.CREATEDDATE) AS YEAR_ONLY,
+					PS.PROJECTNAME,
+					PS.BUDGET
+					FROM JOIN_TESTING AS EP
+						INNER JOIN DEPARTMENTS AS DP
+						ON EP.DEPARTMENTID = DP.DEPARTMENTID
+						INNER JOIN PROJECTS AS PS
+						ON PS.DEPARTMENTID = EP.DEPARTMENTID
+					WHERE BONUS IS NOT NULL
+
+
+------------------------------------------------------------MULTIPLE CTE + JOIN------------------------------------------
+WITH EMPLOYESS_DATA AS 
+	(
+		SELECT * FROM EMPLOYEES 
+		WHERE STATUS IN  ('ACTIVE' , 'INACTIVE')
+	),
+DEPARTMENTS_DATA AS 
+	(
+		SELECT * FROM DEPARTMENTS 
+		WHERE LOCATION IN ( 'CHENNAI' , 'PUNE' , 'MUMBAI' , 'DELHI')
+	),
+PROJECTS_DATA AS 
+	(
+		SELECT * FROM PROJECTS 
+		WHERE PROJECTSTATUS = 'ACTIVE'
+	)
+				
+				SELECT 
+					FIRSTNAME,
+					LASTNAME,
+					SALARY,
+					GENDER
+					FROM EMPLOYESS_DATA AS E 
+					INNER JOIN DEPARTMENTS_DATA AS D
+					ON E.DEPARTMENTID = D.DEPARTMENTID
+					INNER JOIN PROJECTS_DATA AS P
+					ON E.DEPARTMENTID = P.DEPARTMENTID ;
+
+
+------------------------------------------------------------MULTIPLE CTE + JOIN + GROUP BY ------------------------------------------
+
+WITH EMPLOYESS_DATA AS 
+	(
+		SELECT * FROM EMPLOYEES 
+		WHERE STATUS IN  ('ACTIVE' , 'INACTIVE')
+	),
+DEPARTMENTS_DATA AS 
+	(
+		SELECT *
+			FROM DEPARTMENTS  
+			
+	)
+		SELECT 
+			DD.Location
+			FROM EMPLOYESS_DATA AS ED
+			INNER JOIN DEPARTMENTS_DATA DD
+			ON ED.DepartmentID = DD.DepartmentID
+			WHERE GENDER = 'M'
+			GROUP BY LOCATION ;
+
+------------------------------------------------------------CTE + Subquery CHECKING ------------------------------------------
+
+WITH SINGLE_SUBQUERY_CTE AS 
+(
+		SELECT * FROM EMPLOYEES_SUBQUERY
+		WHERE SALARY > ------------------------SINGLE LINE SUBQUERY WITH CTE GREATER COMPARISON 
+			(
+				SELECT AVG(SALARY) AS AVG_SALARY FROM EMPLOYEES_SUBQUERY  
+			) 
+		        AND  DEPARTMENTID IN 
+			(
+				SELECT DEPARTMENTID FROM EMPLOYEES_SUBQUERY
+				WHERE LOCATION = 'CHENNAI'
+				AND MANAGERID IS NOT NULL 
+			)
+
+)
+SELECT * FROM SINGLE_SUBQUERY_CTE;
+--------------------------------------------------------------------------------------------------------------------------------------
+		
+	-----------SINGLE LINE SUB QUERY TESTING -------------------
+WITH SINGLE_DATA AS 
+(	  
+	  SELECT 
+			FIRSTNAME,
+			LASTNAME,
+			GENDER,
+			SALARY
+			FROM EMPLOYEES_SUBQUERY
+)
+	SELECT * FROM SINGLE_DATA 
+	WHERE SALARY >  -----------SINGLE LINE SUB ----- AVG-----------------QUERY TESTING -------------------
+
+(
+	SELECT AVG(SALARY) FROM SINGLE_DATA
+)
+
+-----------MULTI LINE SUB QUERY TESTING ------------------- IN SUB QUERY -----------------------------------------------
+
+WITH MULTIPLE_TESTING_IN AS 
+(	
+	SELECT 
+			DEPARTMENTID,
+			UPPER(CONCAT_WS('_' , FIRSTNAME , LASTNAME)) AS NEW_NAME,
+			CHOOSE(CHARINDEX(GENDER , 'MF') , 'MALE' , 'FEMALE') AS NEW_GENDER,
+			IIF(GENDER = 'M' , 'MALE' , 'FEMALE') AS IF_LOGIC_GENDER,
+			IIF(SALARY > 100000 , 'OK' , 'NOT_OK') AS NEW_SALARY,
+			IIF(BONUS >= 50000 , 'BONUS_OK' , 'BONUS_NOT_OK') AS BONUS_VALUE,
+			YEAR(HIREDATE) AS YEAR_ONLY,
+			DATEDIFF(YEAR , HIREDATE , GETDATE()) AS DIFFERENCE_DATE,
+			DATEADD(YEAR , 10 , GETDATE()) AS ADDED_DATE,
+			LOCATION
+			FROM EMPLOYEES_SUBQUERY
+)
+	SELECT  * FROM MULTIPLE_TESTING_IN 
+	WHERE DEPARTMENTID IN --------------------------MULTIPLE SUB QUERY CTE  , THIS QUERY IS JOINING THE ABOVE QUERY AND BELOW QUERY 
+
+(	
+	SELECT DEPARTMENTID FROM DEPARTMENTS_SUBQUERY
+	WHERE LOCATION = 'CHENNAI'
+)
+
+-----------MULTI LINE SUB QUERY TESTING ------------------- NOT IN SUB QUERY -----------------------------------------------
+
+
+WITH MULTIPLE_TESTING_NOT_IN AS 
+(	
+	SELECT 
+			DEPARTMENTID,
+			UPPER(CONCAT_WS('_' , FIRSTNAME , LASTNAME)) AS NEW_NAME,
+			CHOOSE(CHARINDEX(GENDER , 'MF') , 'MALE' , 'FEMALE') AS NEW_GENDER,
+			IIF(GENDER = 'M' , 'MALE' , 'FEMALE') AS IF_LOGIC_GENDER,
+			IIF(SALARY > 100000 , 'OK' , 'NOT_OK') AS NEW_SALARY,
+			IIF(BONUS >= 50000 , 'BONUS_OK' , 'BONUS_NOT_OK') AS BONUS_VALUE,
+			YEAR(HIREDATE) AS YEAR_ONLY,
+			DATEDIFF(YEAR , HIREDATE , GETDATE()) AS DIFFERENCE_DATE,
+			DATEADD(YEAR , 10 , GETDATE()) AS ADDED_DATE,
+			LOCATION
+			FROM EMPLOYEES_SUBQUERY
+)
+	SELECT  * FROM MULTIPLE_TESTING_NOT_IN 
+	WHERE DEPARTMENTID NOT IN --------------------------MULTIPLE SUB QUERY CTE  , THIS QUERY IS JOINING THE ABOVE QUERY AND BELOW QUERY 
+
+(	
+	SELECT DEPARTMENTID FROM DEPARTMENTS_SUBQUERY
+	WHERE LOCATION = 'CHENNAI'
+)
+----------------------------------------------- CTE WITH ANY QUERY CHECKING ----------------------------------------------
+WITH ANY_CTE_CHEKING AS 
+(
+		SELECT 
+			DEPARTMENTID,
+			EMPLOYEEID,
+			SALARY,
+			UPPER(CONCAT_WS('_' , FIRSTNAME , LASTNAME)) AS NEW_NAME,
+			CHOOSE(CHARINDEX(GENDER , 'MF') , 'MALE' , 'FEMALE') AS NEW_GENDER,
+			IIF(GENDER = 'M' , 'MALE' , 'FEMALE') AS IF_LOGIC_GENDER,
+			IIF(SALARY > 100000 , 'OK' , 'NOT_OK') AS NEW_SALARY,
+			IIF(BONUS >= 50000 , 'BONUS_OK' , 'BONUS_NOT_OK') AS BONUS_VALUE,
+			YEAR(HIREDATE) AS YEAR_ONLY,
+			DATEDIFF(YEAR , HIREDATE , GETDATE()) AS DIFFERENCE_DATE,
+			DATEADD(YEAR , 10 , GETDATE()) AS ADDED_DATE,
+			LOCATION
+			FROM EMPLOYEES_SUBQUERY
+)
+		SELECT * FROM ANY_CTE_CHEKING
+		WHERE SALARY > ANY  -------------- MULTIPLE SUBQUERY WITH CTE AND ANY ------ ANY MEANS ALL THE RECORDS WILL COME ABOVE 1099 EMPLOYEE ID RECORDS
+(
+		SELECT SALARY FROM EMPLOYEES_SUBQUERY
+		WHERE EMPLOYEEID = '1099'
+)
+-------------------------------------------------------------------------------- CTE WITH SOME QUERY CHECKING ----------------------------------------------
+WITH ANY_CTE_CHEKING AS 
+(
+		SELECT 
+			DEPARTMENTID,
+			EMPLOYEEID,
+			SALARY,
+			UPPER(CONCAT_WS('_' , FIRSTNAME , LASTNAME)) AS NEW_NAME,
+			CHOOSE(CHARINDEX(GENDER , 'MF') , 'MALE' , 'FEMALE') AS NEW_GENDER,
+			IIF(GENDER = 'M' , 'MALE' , 'FEMALE') AS IF_LOGIC_GENDER,
+			IIF(SALARY > 100000 , 'OK' , 'NOT_OK') AS NEW_SALARY,
+			IIF(BONUS >= 50000 , 'BONUS_OK' , 'BONUS_NOT_OK') AS BONUS_VALUE,
+			YEAR(HIREDATE) AS YEAR_ONLY,
+			DATEDIFF(YEAR , HIREDATE , GETDATE()) AS DIFFERENCE_DATE,
+			DATEADD(YEAR , 10 , GETDATE()) AS ADDED_DATE,
+			LOCATION
+			FROM EMPLOYEES_SUBQUERY
+)
+		SELECT * FROM ANY_CTE_CHEKING
+		WHERE SALARY > SOME  -------------- MULTIPLE SUBQUERY WITH CTE AND SOME ------ 
+(
+		SELECT SALARY FROM EMPLOYEES_SUBQUERY
+		WHERE EMPLOYEEID = '1099'
+)
+
+-------------------------------------------------------------------------------- CTE WITH ALL QUERY CHECKING ----------------------------------------------
+WITH ALL_CTE_CHEKING AS 
+(
+		SELECT 
+			DEPARTMENTID,
+			EMPLOYEEID,
+			SALARY,
+			UPPER(CONCAT_WS('_' , FIRSTNAME , LASTNAME)) AS NEW_NAME,
+			CHOOSE(CHARINDEX(GENDER , 'MF') , 'MALE' , 'FEMALE') AS NEW_GENDER,
+			IIF(GENDER = 'M' , 'MALE' , 'FEMALE') AS IF_LOGIC_GENDER,
+			IIF(SALARY > 100000 , 'OK' , 'NOT_OK') AS NEW_SALARY,
+			IIF(BONUS >= 50000 , 'BONUS_OK' , 'BONUS_NOT_OK') AS BONUS_VALUE,
+			YEAR(HIREDATE) AS YEAR_ONLY,
+			DATEDIFF(YEAR , HIREDATE , GETDATE()) AS DIFFERENCE_DATE,
+			DATEADD(YEAR , 10 , GETDATE()) AS ADDED_DATE,
+			LOCATION
+			FROM EMPLOYEES_SUBQUERY
+)
+		SELECT * FROM ALL_CTE_CHEKING
+		WHERE SALARY > ALL  -------------- MULTIPLE SUBQUERY WITH CTE AND ALL ------ ANY 
+(
+		SELECT SALARY FROM EMPLOYEES_SUBQUERY
+		WHERE EMPLOYEEID = '1011'
+)
+
+-------------------------------------------------------------------------------- 27-08-2026 ----------------------------------------------
+---------------------------------------------------------------------CTE + SCALAR SUB QUERY + SELECT LOCATION  ----------------------------------------------
+WITH SCALAR_CTE_DATA_SELECT_LOCATION AS 
+(
+			SELECT * FROM EMPLOYEES_SUBQUERY
+)
+			SELECT 
+					UPPER(CONCAT_WS('_' , FIRSTNAME , LASTNAME)) AS NEW_NAME,
+					CHOOSE(CHARINDEX(GENDER , 'MF') , 'MALE' , 'FEMALE') AS NEW_GENDER,
+					IIF(GENDER = 'M' , 'MALE' , 'FEMALE') AS IF_LOGIC_GENDER,
+					IIF(SALARY > 100000 , 'OK' , 'NOT_OK') AS NEW_SALARY,
+					IIF(BONUS >= 50000 , 'BONUS_OK' , 'BONUS_NOT_OK') AS BONUS_VALUE,
+					YEAR(HIREDATE) AS YEAR_ONLY,
+					DATEDIFF(YEAR , HIREDATE , GETDATE()) AS DIFFERENCE_DATE,
+					DATEADD(YEAR , 10 , GETDATE()) AS ADDED_DATE,
+						(
+							SELECT AVG(SALARY)  -------------- SCALAR SUBQUERY WITH SELECTION LOCTION ONLY ONE DATA CAN ENTER INSIDE THE QUERY CALLED AS A SCALAR SUB QUERY  
+							FROM EMPLOYEES_SUBQUERY AS SCALAR_SUB_QUERY_AVG
+						),
+						(
+							SELECT MIN(SALARY)  -------------- SCALAR SUBQUERY WITH SELECTION LOCTION ONLY ONE DATA CAN ENTER INSIDE THE QUERY CALLED AS A SCALAR SUB QUERY  
+							FROM EMPLOYEES_SUBQUERY AS SCALAR_SUB_QUERY_MIN
+						),
+							(
+							SELECT MAX(SALARY)  -------------- SCALAR SUBQUERY WITH SELECTION LOCTION ONLY ONE DATA CAN ENTER INSIDE THE QUERY CALLED AS A SCALAR SUB QUERY  
+							FROM EMPLOYEES_SUBQUERY AS SCALAR_SUB_QUERY_MAX
+						),
+						(
+							SELECT SUM(SALARY)  -------------- SCALAR SUBQUERY WITH SELECTION LOCTION ONLY ONE DATA CAN ENTER INSIDE THE QUERY CALLED AS A SCALAR SUB QUERY  
+							FROM EMPLOYEES_SUBQUERY AS SCALAR_SUB_QUERY_SUM
+						),
+					LOCATION
+					FROM SCALAR_CTE_DATA_SELECT_LOCATION;
+---------------------------------------------------------------------CTE + SCALAR SUB QUERY + WHERE LOCATION  ----------------------------------------------	
+WITH SCALAR_CTE_DATA_FROM_LOCATION AS 
+(
+			SELECT *
+			FROM EMPLOYEES_SUBQUERY
+)
+
+				SELECT *
+				FROM SCALAR_CTE_DATA_FROM_LOCATION 
+				WHERE SALARY >
+							(
+								SELECT MIN(SALARY)
+								FROM EMPLOYEES_SUBQUERY 
+							) 
+				AND SALARY >
+							(
+								SELECT AVG(SALARY)
+								FROM EMPLOYEES_SUBQUERY 
+							) 
+				AND GENDER = 'M'
+
+---------------------------------------------------------------------------------------------- CTE + SELECT QUERY CHECKING -------------------------------------------------------------
+
+WITH CTE_DATA_SELECT_LOCATION AS 
+(
+			SELECT * FROM EMPLOYEES_SUBQUERY
+)
+			SELECT 
+
+						DEPARTMENTID,
+						(
+							SELECT AVG(SALARY) --------------   CTE + SELECT QUERY CHECKING
+							FROM EMPLOYEES_SUBQUERY 
+						) AS SCALAR_SUB_QUERY_AVG ,
+						(
+							SELECT MIN(SALARY)   -------------- CTE + SELECT QUERY CHECKING  
+							FROM EMPLOYEES_SUBQUERY 
+						)AS SCALAR_SUB_QUERY_MIN,
+							(
+							SELECT MAX(SALARY)  -------------- CTE + SELECT QUERY CHECKING  
+							FROM EMPLOYEES_SUBQUERY 
+						)AS SCALAR_SUB_QUERY_MAX,
+						(
+							SELECT SUM(SALARY)  -------------- CTE + SELECT QUERY CHECKING  
+							FROM EMPLOYEES_SUBQUERY 
+						)AS SCALAR_SUB_QUERY_SUM,
+						(
+							SELECT COUNT(*)  -------------- CTE + SELECT QUERY CHECKING  
+							FROM EMPLOYEES_SUBQUERY 
+						)AS SCALAR_SUB_QUERY_SUM,
+
+						SALARY - (
+									SELECT AVG(SALARY) -------------- CTE + SELECT QUERY CHECKING  
+									FROM EMPLOYEES_SUBQUERY 
+							) AS SALARY_AVG_SALARY ,
+
+						SALARY + 
+								(
+									SELECT AVG(SALARY) -------------- CTE + SELECT QUERY CHECKING  
+									FROM EMPLOYEES_SUBQUERY 
+								) AS SALARY_AVG_SALARY ,
+						
+						SALARY + 
+								(
+									SELECT AVG(BONUS) -------------- CTE + SELECT QUERY CHECKING  
+									FROM EMPLOYEES_SUBQUERY 
+								) AS BONUS ,
+					LOCATION
+					FROM CTE_DATA_SELECT_LOCATION;
+
+---------------------------------------------------------------------CTE + FROM Subquery--------------------------------------------------------------------------------------------------------
+WITH CTE_FROM_SUBQUERY_CHECKING AS 
+		(
+				SELECT * FROM EMPLOYEES_SUBQUERY 
+		)
+		
+				SELECT * FROM 
+				   (
+							SELECT               ---------------------------------- SINGLE SELCT QUERY IN  FROM LOCATION AND CTE 
+							DEPARTMENTID AS NEW_DEPARTMENT_NAME,
+							AVG(SALARY) AS AVG_SALARY,
+							MIN(SALARY) AS MAS_SALARY,
+							MAX(SALARY) AS MAX_SALARY
+							FROM CTE_FROM_SUBQUERY_CHECKING
+							GROUP BY DEPARTMENTID
+					) AS T 
+
+	WITH CTE_FROM_SUBQUERY_CHECKING AS  
+		(
+				SELECT * FROM EMPLOYEES_SUBQUERY
+		)
+			
+		SELECT * FROM --------------------------------------------------MULTIPLE SELECT QUERY IN FROM SECTION -------------------
+		  
+		   (
+				SELECT * FROM --------------------------------------------------MULTIPLE SELECT QUERY IN FROM SECTION -------------------
+				(
+					SELECT * FROM --------------------------------------------------MULTIPLE SELECT QUERY IN FROM SECTION -------------------
+						   (
+									SELECT
+									DEPARTMENTID AS NEW_DEPARTMENT_NAME,
+									AVG(SALARY) AS AVG_SALARY,
+									MIN(SALARY) AS MAS_SALARY,
+									MAX(SALARY) AS MAX_SALARY
+									FROM CTE_FROM_SUBQUERY_CHECKING
+									GROUP BY DEPARTMENTID
+							) AS CHECKING_1
+				) AS CHECKING_2
+			) AS  CHECKING_3 
+		WHERE CHECKING_3.AVG_SALARY > 200000
+
+
+------------------------------------------------------------------------------------------------CTE + Multiple Subqueries----------------------------------------------------X	
+WITH MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION AS 	
+		(
+				SELECT * FROM EMPLOYEES_SUBQUERY
+		)
+
+				SELECT 
+						DEPARTMENTID,
+						SALARY,
+						GENDER,
+						AGE,
+						(
+							SELECT AVG(SALARY) --------------   CTE + MULTIPLE SELECT QUERY CHECKING
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION 
+						) AS SCALAR_SUB_QUERY_AVG ,
+
+						(
+							SELECT MIN(SALARY)   --------------  CTE + MULTIPLE SELECT QUERY CHECKING
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION 
+						) AS SCALAR_SUB_QUERY_MIN,
+
+						(
+							SELECT MAX(SALARY)  --------------  CTE + MULTIPLE SELECT QUERY CHECKING  
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION 
+						) AS SCALAR_SUB_QUERY_MAX,
+
+						(
+							SELECT SUM(SALARY)  --------------  CTE + MULTIPLE SELECT QUERY CHECKING 
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION 
+						) AS SCALAR_SUB_QUERY_SUM,
+
+						(
+							SELECT COUNT(*)  --------------  CTE + MULTIPLE SELECT QUERY CHECKING
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION 
+						) AS SCALAR_SUB_QUERY_SUM,
+
+						(
+							SELECT COUNT(*) --------------  CTE + MULTIPLE SELECT QUERY CHECKING
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION AS D1
+							WHERE D1.SALARY > 
+								(
+									SELECT AVG(SALARY) FROM --------------  CTE + MULTIPLE SELECT QUERY CHECKING
+									MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION
+								) 
+						) AS AVG_DATA_MILTIPLE , 
+
+					(
+						(
+							SELECT AVG(SALARY) --------------  CTE + MULTIPLE SELECT QUERY CHECKING
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION
+						)  - 
+						
+						(
+							SELECT SUM(SALARY) --------------  CTE + MULTIPLE SELECT QUERY CHECKING.
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION
+						) 
+					) AS AVG_MINUS_SUM,
+
+					(
+						(
+							SELECT AVG(SALARY) --------------  CTE + MULTIPLE SELECT QUERY CHECKING
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION
+						)  +
+						
+						(
+							SELECT SUM(SALARY) --------------  CTE + MULTIPLE SELECT QUERY CHECKING.
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION
+						) 
+					) AS AVG_PLUS_SUM , 
+
+					BONUS + 
+					(
+							SELECT MIN(SALARY)   --------------  CTE + MULTIPLE SELECT QUERY CHECKING
+							FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION 
+					) AS BONUS_MIN_PLUS_SALARY
+
+				FROM MULTIPLE_SUBQUERY_WITH_CTE_FUNCTION;
+					
+
+------------------------------------------------------------------------------------------------CTE + Multiple NESTED Subqueries----------------------------------------------------X	
+
+WITH MULTIPLE_NESTED_SUBQUERY AS 	
+		(
+				SELECT * FROM EMPLOYEES_SUBQUERY
+		)
+
+				SELECT * FROM MULTIPLE_NESTED_SUBQUERY AS MNS
+				WHERE MNS.SALARY > 
+					(
+						SELECT AVG(SALARY)FROM MULTIPLE_NESTED_SUBQUERY AS MNS2
+						WHERE  DEPARTMENTID IN 
+							(
+								SELECT D.DEPARTMENTID
+									FROM DEPARTMENTS AS D
+									WHERE LOCATION = 'CHENNAI' AND DEPARTMENTID IN 
+									(
+											SELECT DEPARTMENTID 
+												FROM PROJECTS_SUBQUERY AS P 
+												WHERE STATUS = 'ACTIVE' AND EmployeeID IN 
+													(
+														SELECT EmployeeID AS ES
+															FROM EMPLOYEES_SUBQUERY
+															WHERE AGE > 50
+													)
+									)
+							)
+					)
+
+	
+	
+------------------------------------------------------------------------------------------------CTE + CORRELATED SUBQUERY TESTING ----------------------------------------------------X	
+
+WITH CORRELATED_SUBQUERY_CTE AS 	
+		(
+				SELECT * FROM EMPLOYEES_SUBQUERY
+		)
+				SELECT 
+					DEPARTMENTID,
+					EMPLOYEEID,
+					SALARY,
+					AGE,
+					GENDER
+					FROM CORRELATED_SUBQUERY_CTE AS CS
+					WHERE SALARY >
+						(
+							SELECT AVG(SALARY) 
+							FROM CORRELATED_SUBQUERY_CTE AS CS2
+							WHERE CS2.DEPARTMENTID = CS.DEPARTMENTID -----CTE + CORRELATED SUBQUERY TESTING ----------------------------------------------------X	-THIS IS THE MAIN LINE FOR CORRELATED SUBQUERY
+						)
+					AND CS.SALARY >
+						(
+							SELECT MIN(SALARY) 
+							FROM CORRELATED_SUBQUERY_CTE AS CS3
+							WHERE CS3.DEPARTMENTID = CS.DEPARTMENTID-----------------CTE + CORRELATED SUBQUERY TESTING ----------------------------------------------------X	THIS IS THE MAIN LINE FOR CORRELATED SUBQUERY
+						)
+					AND CS.SALARY >
+						(
+							SELECT MIN(SALARY) + 100000
+							FROM CORRELATED_SUBQUERY_CTE AS CS4
+							WHERE CS4.DEPARTMENTID = CS.DEPARTMENTID---------------------CTE + CORRELATED SUBQUERY TESTING ----------------------------------------------------X	 THIS IS THE MAIN LINE FOR CORRELATED SUBQUERY 
+						)
+
+
+
+WITH CORRELATED_SUBQUERY_CTE AS 	
+		(
+				SELECT * FROM EMPLOYEES_SUBQUERY
+		),
+CORRELATED_SUBQUERY_CTE_ANOTHER AS 
+		(
+				SELECT 
+					DEPARTMENTID,
+					COUNT(*) AS TOTAL_EMPLOYEES,
+					AVG(SALARY) AS AVG_SALARY,
+					MIN(SALARY) AS MIN_SALARY,
+					MAX(SALARY) AS MX_SALARY,
+					SUM(SALARY) AS SUM_SALARY
+					FROM CORRELATED_SUBQUERY_CTE 
+					GROUP BY DEPARTMENTID
+
+		)
+				SELECT
+					CS.DEPARTMENTID,
+					CS.EMPLOYEEID AS NEW_EMPLOYEEID,
+					CS.SALARY,
+					CS.AGE,
+					CS.GENDER,
+					DS.DEPARTMENTNAME,
+					DS.LOCATION,
+					DS.BUDGET,
+					DS.ISACTIVE,
+						(
+							SELECT AVG(SALARY) 
+							FROM CORRELATED_SUBQUERY_CTE
+						) - SALARY  AS NEW_SALARY,
+						(
+							SELECT MIN (BONUS) 
+							FROM CORRELATED_SUBQUERY_CTE
+						) +  BONUS  AS BONUS_PLUS_MINUM
+
+					FROM CORRELATED_SUBQUERY_CTE AS CS
+					INNER JOIN DEPARTMENTS_SUBQUERY AS DS
+					ON CS.DEPARTMENTID = DS.DEPARTMENTID
+					WHERE SALARY > 
+						(
+							SELECT AVG(SALARY) FROM CORRELATED_SUBQUERY_CTE CS1
+							WHERE CS1.DEPARTMENTID = CS.DEPARTMENTID
+						)
+					AND GENDER = 'M' 
+									
+				
+	-----------------------------------------------CTE + EXISTS ---------------------------------------------------		
+WITH EXSITS_CTE_CHECKING AS 
+
+(
+	SELECT * FROM EMPLOYEES_SUBQUERY
+)
+	SELECT
+		FIRSTNAME ,
+		LASTNAME ,
+		SALARY,
+		AGE,
+		GENDER ,
+		LOCATION
+		FROM EXSITS_CTE_CHECKING AS A 
+		WHERE EXISTS  ---------------------------EXISTS WILL CHECK ANOTHE TABLE WHERE THE DATA AVAILABLE OR NOT IF MATCHED MEANS THOSE RECORD WILL COME TO THE OUTPUT 
+			(
+				SELECT 1 
+				FROM DEPARTMENTS_SUBQUERY AS B
+				WHERE A.DEPARTMENTID = B.DEPARTMENTID
+				AND LOCATION = 'CHENNAI'
+			)
+		AND EXISTS ------------ THIS IS ANOTHER TABLE ADDED WITH EXISTS FUNCTION (IN THIS QUERY TOTALLY 3 TABLE CHECKED)
+			(
+				SELECT 1 
+				FROM PROJECTS_SUBQUERY AS C
+				WHERE A.DEPARTMENTID = C.DEPARTMENTID
+				AND STATUS = 'ACTIVE'
+			)
+
+-----------------------------------------------CTE + NOT EXISTS ---------------------------------------------------		
+WITH EXSITS_CTE_CHECKING AS 
+
+(
+	SELECT * FROM EMPLOYEES_SUBQUERY
+)
+	SELECT
+		FIRSTNAME ,
+		LASTNAME ,
+		SALARY,
+		AGE,
+		GENDER ,
+		LOCATION
+		FROM EXSITS_CTE_CHECKING AS A 
+		WHERE NOT EXISTS  ---------------------------NOT EXISTS WILL CHECK ANOTHE TABLE WHERE THE DATA AVAILABLE OR NOT IF NOT MATCHED  THOSE RECORD WILL COME TO THE OUTPUT 
+			(
+				SELECT 1 
+				FROM DEPARTMENTS_SUBQUERY AS B
+				WHERE A.DEPARTMENTID = B.DEPARTMENTID
+				AND LOCATION = 'CHENNAI'
+			)
+
+WITH EXSITS_CTE_CHECKING AS 
+
+(
+	SELECT * FROM EMPLOYEES_SUBQUERY
+)
+	SELECT
+		FIRSTNAME ,
+		LASTNAME ,
+		SALARY,
+		AGE,
+		GENDER ,
+		LOCATION
+		FROM EXSITS_CTE_CHECKING AS A 
+		WHERE NOT EXISTS --------NOT EXISTS WILL CHECK ANOTHE TABLE WHERE THE DATA AVAILABLE OR NOT IF NOT MATCHED  THOSE RECORD WILL COME TO THE OUTPUT 
+			(
+				SELECT 1 
+					FROM PROJECTS_SUBQUERY AS B
+					WHERE B.DEPARTMENTID = A.DEPARTMENTID
+					AND  B.STATUS = 'COMPLETED'
+			)
+-------------------------------------------------------Multiple CTE + Subquery--------------------------------------------------------------
+
+WITH EXSITS_CTE_CHECKING AS  ---------------- FIRST CTE ---------
+
+		(
+			SELECT * FROM EMPLOYEES_SUBQUERY
+		),
+NEXT_CTE AS  ------------------ SECOND CTE ----------------
+		(
+			SELECT * FROM DEPARTMENTS_SUBQUERY
+		)
+
+		
+			SELECT *
+				FROM EMPLOYEES_SUBQUERY AS A 
+				WHERE SALARY >
+					(
+						SELECT AVG(SALARY) FROM 
+						EMPLOYEES_SUBQUERY AS B
+						WHERE B.DEPARTMENTID IN 
+							(
+								SELECT C.DEPARTMENTID FROM 
+									NEXT_CTE AS C
+										WHERE C.LOCATION = 'CHENNAI'
+							)
+					) 
+
+
+-------------------------------------------------------Multiple CTE + Subquery--------------------------------------------------------------
+
+WITH EXSITS_CTE_CHECKING AS  ---------------- FIRST CTE ---------
+
+		(
+			SELECT * FROM EMPLOYEES_SUBQUERY
+		),
+NEXT_CTE AS  ------------------ SECOND CTE ----------------
+		(
+			SELECT * FROM DEPARTMENTS_SUBQUERY
+		),
+NEXT_CTE_1 AS ------------------ THIRD CTE ----------------
+		(
+			SELECT * FROM PROJECTS_SUBQUERY
+		)
+			SELECT *
+				FROM EMPLOYEES_SUBQUERY AS A 
+				WHERE SALARY >
+					(
+						SELECT AVG(SALARY) FROM 
+						EMPLOYEES_SUBQUERY AS B
+						WHERE B.DEPARTMENTID IN 
+							(
+								SELECT C.DEPARTMENTID FROM 
+									NEXT_CTE AS C
+										WHERE DEPARTMENTID IN 
+											(
+												SELECT D.DEPARTMENTID FROM 
+													NEXT_CTE_1 AS D
+														WHERE STATUS ='ACTIVE'
+											)
+							)
+					) 
+
+
+-------------------------------------------------------Multiple CTE + Correlated Subquery--------------------------------------------------------------
+
+	WITH Multiple_CTE_Correlated_Subquery AS  ---------------- FIRST CTE ---------
+
+		(
+			SELECT * FROM EMPLOYEES_SUBQUERY
+		),
+NEXT_CTE AS  ------------------ SECOND CTE ----------------
+		(
+			SELECT * FROM DEPARTMENTS_SUBQUERY
+		)
+			SELECT 
+				FIRSTNAME,
+				LASTNAME,
+				AGE,
+				GENDER,
+				SALARY,
+				LOCATION FROM Multiple_CTE_Correlated_Subquery AS A 
+				WHERE SALARY > 
+					(
+						SELECT AVG(SALARY)
+						FROM Multiple_CTE_Correlated_Subquery AS B
+						WHERE A.DEPARTMENTID = B.DEPARTMENTID
+					)
+				AND EXISTS 
+					(
+						SELECT 1 
+						FROM NEXT_CTE AS C 
+						WHERE C.DEPARTMENTID = A.DEPARTMENTID
+					)
+----------------------------------------------------------			------------------------------------------
