@@ -9960,13 +9960,173 @@ CORRELATED_SUBQUERY_CTE_ANOTHER AS
 							WHERE CS1.DEPARTMENTID = CS.DEPARTMENTID
 						)
 					AND GENDER = 'M' 
-					
-						
+									
 				
-			
+	-----------------------------------------------CTE + EXISTS ---------------------------------------------------		
+WITH EXSITS_CTE_CHECKING AS 
+
+(
+	SELECT * FROM EMPLOYEES_SUBQUERY
+)
+	SELECT
+		FIRSTNAME ,
+		LASTNAME ,
+		SALARY,
+		AGE,
+		GENDER ,
+		LOCATION
+		FROM EXSITS_CTE_CHECKING AS A 
+		WHERE EXISTS  ---------------------------EXISTS WILL CHECK ANOTHE TABLE WHERE THE DATA AVAILABLE OR NOT IF MATCHED MEANS THOSE RECORD WILL COME TO THE OUTPUT 
+			(
+				SELECT 1 
+				FROM DEPARTMENTS_SUBQUERY AS B
+				WHERE A.DEPARTMENTID = B.DEPARTMENTID
+				AND LOCATION = 'CHENNAI'
+			)
+		AND EXISTS ------------ THIS IS ANOTHER TABLE ADDED WITH EXISTS FUNCTION (IN THIS QUERY TOTALLY 3 TABLE CHECKED)
+			(
+				SELECT 1 
+				FROM PROJECTS_SUBQUERY AS C
+				WHERE A.DEPARTMENTID = C.DEPARTMENTID
+				AND STATUS = 'ACTIVE'
+			)
+
+-----------------------------------------------CTE + NOT EXISTS ---------------------------------------------------		
+WITH EXSITS_CTE_CHECKING AS 
+
+(
+	SELECT * FROM EMPLOYEES_SUBQUERY
+)
+	SELECT
+		FIRSTNAME ,
+		LASTNAME ,
+		SALARY,
+		AGE,
+		GENDER ,
+		LOCATION
+		FROM EXSITS_CTE_CHECKING AS A 
+		WHERE NOT EXISTS  ---------------------------NOT EXISTS WILL CHECK ANOTHE TABLE WHERE THE DATA AVAILABLE OR NOT IF NOT MATCHED  THOSE RECORD WILL COME TO THE OUTPUT 
+			(
+				SELECT 1 
+				FROM DEPARTMENTS_SUBQUERY AS B
+				WHERE A.DEPARTMENTID = B.DEPARTMENTID
+				AND LOCATION = 'CHENNAI'
+			)
+
+WITH EXSITS_CTE_CHECKING AS 
+
+(
+	SELECT * FROM EMPLOYEES_SUBQUERY
+)
+	SELECT
+		FIRSTNAME ,
+		LASTNAME ,
+		SALARY,
+		AGE,
+		GENDER ,
+		LOCATION
+		FROM EXSITS_CTE_CHECKING AS A 
+		WHERE NOT EXISTS --------NOT EXISTS WILL CHECK ANOTHE TABLE WHERE THE DATA AVAILABLE OR NOT IF NOT MATCHED  THOSE RECORD WILL COME TO THE OUTPUT 
+			(
+				SELECT 1 
+					FROM PROJECTS_SUBQUERY AS B
+					WHERE B.DEPARTMENTID = A.DEPARTMENTID
+					AND  B.STATUS = 'COMPLETED'
+			)
+-------------------------------------------------------Multiple CTE + Subquery--------------------------------------------------------------
+
+WITH EXSITS_CTE_CHECKING AS  ---------------- FIRST CTE ---------
+
+		(
+			SELECT * FROM EMPLOYEES_SUBQUERY
+		),
+NEXT_CTE AS  ------------------ SECOND CTE ----------------
+		(
+			SELECT * FROM DEPARTMENTS_SUBQUERY
+		)
+
+		
+			SELECT *
+				FROM EMPLOYEES_SUBQUERY AS A 
+				WHERE SALARY >
+					(
+						SELECT AVG(SALARY) FROM 
+						EMPLOYEES_SUBQUERY AS B
+						WHERE B.DEPARTMENTID IN 
+							(
+								SELECT C.DEPARTMENTID FROM 
+									NEXT_CTE AS C
+										WHERE C.LOCATION = 'CHENNAI'
+							)
+					) 
 
 
+-------------------------------------------------------Multiple CTE + Subquery--------------------------------------------------------------
 
+WITH EXSITS_CTE_CHECKING AS  ---------------- FIRST CTE ---------
+
+		(
+			SELECT * FROM EMPLOYEES_SUBQUERY
+		),
+NEXT_CTE AS  ------------------ SECOND CTE ----------------
+		(
+			SELECT * FROM DEPARTMENTS_SUBQUERY
+		),
+NEXT_CTE_1 AS ------------------ THIRD CTE ----------------
+		(
+			SELECT * FROM PROJECTS_SUBQUERY
+		)
+			SELECT *
+				FROM EMPLOYEES_SUBQUERY AS A 
+				WHERE SALARY >
+					(
+						SELECT AVG(SALARY) FROM 
+						EMPLOYEES_SUBQUERY AS B
+						WHERE B.DEPARTMENTID IN 
+							(
+								SELECT C.DEPARTMENTID FROM 
+									NEXT_CTE AS C
+										WHERE DEPARTMENTID IN 
+											(
+												SELECT D.DEPARTMENTID FROM 
+													NEXT_CTE_1 AS D
+														WHERE STATUS ='ACTIVE'
+											)
+							)
+					) 
+
+
+-------------------------------------------------------Multiple CTE + Correlated Subquery--------------------------------------------------------------
+
+	WITH Multiple_CTE_Correlated_Subquery AS  ---------------- FIRST CTE ---------
+
+		(
+			SELECT * FROM EMPLOYEES_SUBQUERY
+		),
+NEXT_CTE AS  ------------------ SECOND CTE ----------------
+		(
+			SELECT * FROM DEPARTMENTS_SUBQUERY
+		)
+			SELECT 
+				FIRSTNAME,
+				LASTNAME,
+				AGE,
+				GENDER,
+				SALARY,
+				LOCATION FROM Multiple_CTE_Correlated_Subquery AS A 
+				WHERE SALARY > 
+					(
+						SELECT AVG(SALARY)
+						FROM Multiple_CTE_Correlated_Subquery AS B
+						WHERE A.DEPARTMENTID = B.DEPARTMENTID
+					)
+				AND EXISTS 
+					(
+						SELECT 1 
+						FROM NEXT_CTE AS C 
+						WHERE C.DEPARTMENTID = A.DEPARTMENTID
+					)
+----------------------------------------------------------			------------------------------------------		
 
 
 SELECT * FROM EMPLOYEES_SUBQUERY ORDER BY SALARY DESC 
