@@ -1,0 +1,42 @@
+
+1. Error Code: 2068 (LOAD DATA LOCAL INFILE rejected)
+Why it happened: MySQL Workbench blocks reading files directly from your local computer (C:\Users\...) for security reasons.
+
+Next Time Fix: Skip LOCAL. Always copy your CSV into the MySQL Uploads folder (C:\ProgramData\MySQL\MySQL Server 8.0\Uploads\) and run LOAD DATA INFILE (without the word LOCAL).
+
+
+2. Import Wizard "Can't analyze file / Wrong encoding"
+Why it happened: SQL Server exports CSVs in UTF-16/ANSI format, but MySQL expects UTF-8.
+
+Next Time Fix: Convert the file encoding using PowerShell before importing:
+
+Solution : Command -------------------         (Get-Content "C:\Path\To\your_file.csv") | Set-Content -Encoding UTF8 "C:\ProgramData\MySQL\MySQL Server 8.0\Uploads\your_file_utf8.csv"
+
+Import Wizard Python Traceback (Unknown column 'None')
+Why it happened: The graphical Workbench wizard breaks easily when CSV files contain blank columns or trailing empty lines.
+
+Next Time Fix: Avoid using the graphical Import Wizard for SQL Server exports. Always use the LOAD DATA INFILE SQL query instead.
+
+4. Error Code: 1366 (Incorrect integer value: '')
+
+Why it happened: The CSV had empty blank text "" for numeric columns (Dept_Id, IntWtID, etc.), which MySQL strict mode rejects.
+
+Next Time Fix: Run this command right before your import query to temporarily allow empty strings to convert smoothly:
+
+solution : Command --------------------  SET SESSION sql_mode = '';
+
+final command :
+
+1. 	 (Get-Content "C:\Path\To\your_file.csv") | Set-Content -Encoding UTF8 "C:\ProgramData\MySQL\MySQL Server 8.0\Uploads\your_file_utf8.csv"
+
+2.	SET SESSION sql_mode = '';
+
+3.
+	LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/your_file_utf8.csv'
+	INTO TABLE your_table_name
+	CHARACTER SET utf8mb4
+	FIELDS TERMINATED BY ','
+	OPTIONALLY ENCLOSED BY '"'
+	LINES TERMINATED BY '\r\n'
+	IGNORE 1 ROWS;
+
