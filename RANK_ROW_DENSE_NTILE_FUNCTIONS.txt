@@ -1,0 +1,469 @@
+----------------------------------------------------------			------------------------------------------		
+--------------------------------------------DATE : 28-08-2026----------------------------------------------
+----------------------------------------WUNDOWS_FUNCTION -------------------------------------------
+-------------------ROW_NUMBER() ------------------------------------------
+
+
+SELECT
+	EMPLOYEEID,
+	FIRSTNAME,
+	LASTNAME,
+	GENDER,
+	LOCATION,
+	SALARY,
+	STATUS,
+	ROW_NUMBER() OVER(ORDER BY SALARY DESC) AS NEW_ID ------------------ NORMAL QUERY WITHOUT PARTITION ()WITH SINGLE ORDER BY QUERY 
+	FROM EMPLOYEES_WINDOWS;
+
+SELECT
+	EMPLOYEEID,
+	FIRSTNAME,
+	LASTNAME,
+	GENDER,
+	LOCATION,
+	SALARY,
+	STATUS,
+	HIREDATE,
+	ROW_NUMBER() OVER(ORDER BY SALARY DESC , HIREDATE DESC) AS NEW_ID ------------------ NORMAL QUERY WITHOUT PARTITION ()WITH SINGLE ORDER BY QUERY 
+	FROM EMPLOYEES_WINDOWS;
+
+SELECT
+	EMPLOYEEID,
+	FIRSTNAME,
+	LASTNAME,
+	GENDER,
+	LOCATION,
+	SALARY,
+	STATUS,
+	HIREDATE,
+	ROW_NUMBER() OVER(ORDER BY SALARY DESC , EMPLOYEEID ASC) AS NEW_ID ------------------ Row Number with EmployeeID as Tie-Breaker (This is a good production habit when duplicate ordering values exist.)
+	FROM EMPLOYEES_WINDOWS;
+
+SELECT
+	EMPLOYEEID,
+	FIRSTNAME,
+	LASTNAME,
+	GENDER,
+	LOCATION,
+	SALARY,
+	STATUS,
+	HIREDATE,
+	ROW_NUMBER() OVER(PARTITION BY LOCATION ORDER BY SALARY DESC) AS NEW_ID ------------------ PARTITION BY WITH ORDER BY 
+	FROM EMPLOYEES_WINDOWS;
+
+SELECT
+	EMPLOYEEID,
+	FIRSTNAME,
+	LASTNAME,
+	GENDER,
+	LOCATION,
+	SALARY,
+	STATUS,
+	HIREDATE,
+	ROW_NUMBER() OVER(PARTITION BY LOCATION  , STATUS ORDER BY SALARY DESC) AS NEW_ID ------------------ MULTIPLE PARTITION BY WITH ORDER BY 
+	FROM EMPLOYEES_WINDOWS;
+--------------------------------------Filtering ROW_NUMBER()-------------------------------
+WITH FILTERING_ROW_WINDOWS AS 
+	(
+		SELECT
+			EMPLOYEEID,
+			FIRSTNAME,
+			LASTNAME,
+			GENDER,
+			LOCATION,
+			SALARY,
+			STATUS,
+			HIREDATE,
+			ROW_NUMBER() OVER(PARTITION BY LOCATION  , STATUS ORDER BY SALARY DESC) AS NEW_ID ------------------ PARTITION BY FILTERING 
+			FROM EMPLOYEES_WINDOWS
+	) 
+SELECT * FROM FILTERING_ROW_WINDOWS
+WHERE NEW_ID < 2 AND STATUS = 'ACTIVE'
+-------------------------------ORDER BY  + PARITTION BY FILTERING _ROW_NUMBER()-------------------------------------------------
+WITH FILTERING_ROW_WINDOWS AS 
+	(
+		SELECT
+			EMPLOYEEID,
+			FIRSTNAME,
+			LASTNAME,
+			GENDER,
+			LOCATION,
+			SALARY,
+			STATUS,
+			HIREDATE,
+			ROW_NUMBER() OVER(PARTITION BY LOCATION  , STATUS ORDER BY SALARY DESC) AS NEW_ID ------------------ PARTITION BY FILTERING 
+			FROM EMPLOYEES_WINDOWS
+	) 
+SELECT * FROM FILTERING_ROW_WINDOWS
+WHERE NEW_ID < 2 AND STATUS = 'ACTIVE'
+
+WITH FILTERING_ROW_WINDOWS AS 
+	(
+		SELECT
+			EMPLOYEEID,
+			FIRSTNAME,
+			LASTNAME,
+			GENDER,
+			LOCATION,
+			SALARY,
+			STATUS,
+			HIREDATE,
+			ROW_NUMBER() OVER(ORDER BY SALARY DESC) AS NEW_ID ------------------ ORDER BY FILTERING ---- THIS IS THE HIGHEST SALARY FILTERRING (DESC)
+			FROM EMPLOYEES_WINDOWS
+	) 
+SELECT * FROM FILTERING_ROW_WINDOWS
+WHERE NEW_ID <= 5
+
+WITH FILTERING_ROW_WINDOWS AS 
+	(
+		SELECT
+			EMPLOYEEID,
+			FIRSTNAME,
+			LASTNAME,
+			GENDER,
+			LOCATION,
+			SALARY,
+			STATUS,
+			HIREDATE,
+			ROW_NUMBER() OVER(ORDER BY SALARY ASC) AS NEW_ID ------------------ ORDER BY FILTERING ---- THIS IS THE LOWEST SALARY FILTERING (ASC) 
+			FROM EMPLOYEES_WINDOWS
+	) 
+SELECT * FROM FILTERING_ROW_WINDOWS
+WHERE NEW_ID <= 5
+
+
+WITH MULTIPLE_CASE_WINDOWS_FUNCTION AS
+(
+		SELECT
+			UPPER(FIRSTNAME) AS NEW_NAME,
+			UPPER(LASTNAME) AS LAST_NEW_NAME,
+			CHOOSE(CHARINDEX(GENDER , 'MF' ),'MALE', 'FEMALE') AS NEW_GENDER,
+			IIF(GENDER =  'M' ,'MALE' , 'FEMALE' ) AS IIF_GENDER,
+			CASE 
+				WHEN GENDER  = 'M' THEN 'MALE'---------------------------------CASE WITH CTE AND WINDOWS_FUNCTION 
+				ELSE 'FEMALE'
+			END AS CASE_GENDER ,
+			CASE 
+				WHEN SALARY < 50000 THEN 'LOW_SALARY'
+				WHEN SALARY BETWEEN 100000 AND 200000 THEN 'MEDIUM' ---------------------------------CASE WITH CTE AND WINDOWS_FUNCTION 
+				ELSE'HIGH'
+			END AS NEW_SALARY,
+			CASE 
+				WHEN BONUS < 10000 THEN 'LOW'
+				WHEN BONUS BETWEEN 20000 AND 50000 THEN 'MEDIUM'---------------------------------CASE WITH CTE AND WINDOWS_FUNCTION 
+				ELSE'HIGH'
+			END AS NEW_BONUS, 
+			YEAR(HIREDATE) - YEAR(GETDATE()) AS DIFFERENCE_DATE,
+			LOCATION,
+			ROW_NUMBER () OVER (PARTITION BY LOCATION ORDER BY SALARY DESC) AS UNIQUE_ROWS
+			FROM EMPLOYEES_WINDOWS
+)
+SELECT * FROM MULTIPLE_CASE_WINDOWS_FUNCTION
+WHERE UNIQUE_ROWS  <= 10
+AND LOCATION = 'CHENNAI'
+ 
+ -----------------------------------Advanced Data Engineering Pattern---------------------------------------------
+ WITH ADVACNED_DATA_ENGINEERING_CTE AS 
+	(
+		SELECT
+		* ,
+			ROW_NUMBER() OVER(PARTITION BY EMPLOYEEID ORDER BY  SALARY DESC) AS NEW_ID   -------------- EMPLOYEEID IS PARTITION BY IN THIS TABLE THERE NO DUPLICATE ID SO WE COULD'T SEE THE DIFFERENCE 
+			FROM EMPLOYEES_WINDOWS    -------------IF DUBLICATED EMPLOYEEID AVAILABLE THEN WE CAN SEE THE DIFFERENCE
+	) 
+SELECT * FROM ADVACNED_DATA_ENGINEERING_CTE
+WHERE NEW_ID = 1 
+
+------------Top N Per Group — Reusable Template---------------------------
+------------This is the most important template:----------------------******************************-----VERY IMPORTANT TOPICS 
+
+WITH FILTERING_ROW_WINDOWS AS 
+	(
+		SELECT
+			EW.EMPLOYEEID,
+			EW.FIRSTNAME,
+			EW.LASTNAME,
+			EW.GENDER,
+			EW.LOCATION,
+			EW.SALARY,
+			EW.STATUS,
+			EW.HIREDATE,
+			ROW_NUMBER() OVER(ORDER BY SALARY ASC) AS NEW_ID ,    ------------------ ORDER BY FILTERING ---- THIS IS THE LOWEST SALARY FILTERING (ASC) 
+			OW.PRODUCTCATEGORY,
+			OW.ORDERDATE,
+			OW.STATUS AS_ORDER_DATA
+			FROM EMPLOYEES_WINDOWS AS EW
+			INNER JOIN ORDERS_WINDOWS AS OW  
+			ON EW.EMPLOYEEID = OW.EMPLOYEEID
+	) 
+SELECT * FROM FILTERING_ROW_WINDOWS
+WHERE NEW_ID  <= 5 
+AND AS_ORDER_DATA = 'PENDING'
+
+-------------------------------------------------------------RANK() FUNCTION ------------------------------------------------------
+---------------------------------------Gives same rank for ties, but leaves gaps after the tie.------------------------------------
+
+SELECT
+	*,
+	RANK() OVER(ORDER BY SALARY DESC) AS NEW_ID ------------------ RANK ALL EMPLOYEES BY HIGH SALRY-------------------
+	FROM WINDOWS_FUNCTION;
+
+SELECT
+	*,
+	RANK() OVER(ORDER BY SALARY ASC) AS NEW_ID ------------------ RANK ALL EMPLOYEES BY LOW SALRY-------------------
+	FROM WINDOWS_FUNCTION;
+		
+SELECT
+	*,
+	RANK() OVER(PARTITION BY DEPARTMENTNAME ORDER BY SALARY ASC) AS NEW_ID ------------------ Ranking Within Department-------------------
+	FROM WINDOWS_FUNCTION;
+------RANKING BY EMPLOYEE-------------------------
+SELECT 
+	EMPLOYEEID,
+	SUM(SALARY) AS TOTAL_SALARY,
+	RANK() OVER(ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------Rank employees according to their total sales.
+	RANK() OVER(ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------Rank employees according to their AVG sales.
+	RANK() OVER(ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------Rank employees according to their MIN sales.
+	RANK() OVER(ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------Rank employees according to their MAX sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY EMPLOYEEID
+-------RANKING BY DEPARTMENTS----------
+SELECT 
+	DEPARTMENTID,
+	SUM(SALARY) AS TOTAL_SALARY,
+	RANK() OVER(ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------Rank DEPARTMENT according to their total sales.
+	RANK() OVER(ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------Rank DEPARTMENT according to their AVG sales.
+	RANK() OVER(ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------Rank DEPARTMENT according to their MIN sales.
+	RANK() OVER(ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------Rank DEPARTMENT according to their MAX sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY DEPARTMENTID;
+
+-------------RANKING BY DEPARTMENTNAME --------------
+SELECT 
+	DEPARTMENTNAME,
+	SUM(SALARY) AS TOTAL_SALARY,
+	RANK() OVER(ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------Rank DEPARTMENT according to their total sales.
+	RANK() OVER(ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------Rank DEPARTMENT according to their AVG sales.
+	RANK() OVER(ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------Rank DEPARTMENT according to their MIN sales.
+	RANK() OVER(ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------Rank DEPARTMENT according to their MAX sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY DEPARTMENTNAME;
+-----------RANKING BY LOCATION --------	
+SELECT 
+	LOCATION,
+	SUM(SALARY) AS TOTAL_SALARY,
+	RANK() OVER(ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------Rank DEPARTMENT according to their total sales.
+	RANK() OVER(ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------Rank DEPARTMENT according to their AVG sales.
+	RANK() OVER(ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------Rank DEPARTMENT according to their MIN sales.
+	RANK() OVER(ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------Rank DEPARTMENT according to their MAX sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY LOCATION;
+----WITH PARTITION BY ---------
+SELECT 
+	LOCATION,
+	DEPARTMENTNAME,
+	SUM(SALARY) AS TOTAL_SALARY,
+	RANK() OVER(PARTITION BY LOCATION  ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------Rank DEPARTMENT according to their total sales.
+	RANK() OVER(PARTITION BY LOCATION ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------Rank DEPARTMENT according to their AVG sales.
+	RANK() OVER(PARTITION BY LOCATION ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------Rank DEPARTMENT according to their MIN sales.
+	RANK() OVER(PARTITION BY LOCATION ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------Rank DEPARTMENT according to their MAX sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY LOCATION ,DEPARTMENTNAME;
+
+---------------RANK() WITH CTE QUERY ---------------------------------
+WITH RANK_FUNCTION AS 
+	(
+		SELECT 
+			FIRSTNAME ,
+			LASTNAME,
+			AGE,
+			DEPARTMENTNAME,
+			LOCATION,
+			SALARY,
+			HIREDATE,
+			UPDATEDDATE,
+			EMPLOYMENTSTATUS,
+			RANK() OVER (PARTITION BY DEPARTMENTNAME ORDER BY SALARY DESC) AS NEW_RANK_FUNCTION 
+			FROM WINDOWS_FUNCTION
+	)
+SELECT * FROM RANK_FUNCTION
+WHERE NEW_RANK_FUNCTION <= 3 ;
+
+
+------------------------------------RANK + CASE + CTE-----------------------------------------------
+
+WITH RANK_FUNCTION AS 
+(
+		SELECT 
+			FIRSTNAME ,
+			LASTNAME,
+			AGE,
+			DEPARTMENTNAME,
+			LOCATION,
+			SALARY,
+			HIREDATE,
+			UPDATEDDATE,
+			EMPLOYMENTSTATUS,
+			CASE 
+				WHEN 
+					RANK() OVER (PARTITION BY DEPARTMENTNAME ORDER BY SALARY DESC) = 1 THEN 'HIGHEST_SALARY' 
+				WHEN
+					RANK() OVER (PARTITION BY DEPARTMENTNAME ORDER BY SALARY DESC) BETWEEN 2 AND 5 THEN 'MEDIUM_SALARY'
+				ELSE 'LOW'
+			END AS 'NEW_SALARY_TYPE'
+			FROM WINDOWS_FUNCTION
+)
+SELECT * FROM RANK_FUNCTION ;
+
+-------------------------------Advanced Business Query ---------------16. Highest Revenue Product Per Region----------------------------
+
+WITH RANK_FUNCTION AS 
+(
+		SELECT 
+			DEPARTMENTNAME,
+			LOCATION,
+			SUM(SALARY) AS NEW_SALARY,
+			RANK() OVER (PARTITION BY LOCATION ORDER BY SUM(SALARY) DESC) AS TOTAL_REVENU
+			FROM WINDOWS_FUNCTION
+			GROUP BY DEPARTMENTNAME , LOCATION 
+)
+SELECT * FROM RANK_FUNCTION
+WHERE TOTAL_REVENU <=3 
+ORDER BY LOCATION DESC 
+
+-------------------------------------------------------------DENSE_RANK() FUNCTION ------------------------------------------------------
+---------------------------------------Gives same rank for ties, BUT NO GAP------------------------------------
+
+SELECT
+	*,
+	DENSE_RANK() OVER(ORDER BY SALARY DESC) AS NEW_ID ------------------ DENSE_RANK ALL EMPLOYEES BY HIGH SALRY-------------------
+	FROM WINDOWS_FUNCTION;
+
+SELECT
+	*,
+	DENSE_RANK() OVER(ORDER BY SALARY ASC) AS NEW_ID ------------------ DENSE_RANK ALL EMPLOYEES BY HIGH SALRY-----------------
+	FROM WINDOWS_FUNCTION;
+
+SELECT
+	*,
+	DENSE_RANK() OVER(PARTITION BY DEPARTMENTNAME ORDER BY SALARY ASC) AS NEW_ID ------------------ DENSE_RANK With Department-------------------
+	FROM WINDOWS_FUNCTION;
+
+------DENSE_RANKING BY EMPLOYEE-------------------------
+SELECT 
+	EMPLOYEEID,
+	COUNT(*) AS TOTAL_EMPLOYEE,
+	SUM(SALARY) AS TOTAL_SALARY,
+	MIN(SALARY) AS MIN_SALARY,
+	MAX(SALARY) AS MAX_SALARY,
+	AVG(SALARY) AS AVG_SALARY,
+	DENSE_RANK() OVER(ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------DENSE_Rank employees according to their total sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY EMPLOYEEID;
+-----------------DENSE_RANKING BY DEPARTMENT --------------------
+SELECT 
+	DEPARTMENTNAME,
+	COUNT(*) AS TOTAL_EMPLOYEE,
+	SUM(SALARY) AS TOTAL_SALARY,
+	MIN(SALARY) AS MIN_SALARY,
+	MAX(SALARY) AS MAX_SALARY,
+	AVG(SALARY) AS AVG_SALARY,
+	DENSE_RANK() OVER(ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------DENSE_Rank employees according to their total sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY DEPARTMENTNAME;
+
+-----------------DENSE_RANKING BY LOCATION --------------------
+
+SELECT 
+	LOCATION,
+	COUNT(*) AS TOTAL_EMPLOYEE,
+	SUM(SALARY) AS TOTAL_SALARY,
+	MIN(SALARY) AS MIN_SALARY,
+	MAX(SALARY) AS MAX_SALARY,
+	AVG(SALARY) AS AVG_SALARY,
+	DENSE_RANK() OVER(ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------DENSE_Rank employees according to their total sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY LOCATION;
+
+-----------------DENSE_RANKING WITH PARTITION BY AND ORDER  BY LOCATION --------------------
+SELECT 
+	LOCATION,
+	COUNT(*) AS TOTAL_EMPLOYEE,
+	SUM(SALARY) AS TOTAL_SALARY,
+	MIN(SALARY) AS MIN_SALARY,
+	MAX(SALARY) AS MAX_SALARY,
+	AVG(SALARY) AS AVG_SALARY,
+	DENSE_RANK() OVER( PARTITION BY LOCATION  ORDER BY SUM(SALARY) DESC) AS RANK_FUNCTION,-------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(PARTITION BY LOCATION ORDER BY AVG (SALARY) DESC) AS RANK_AVG,------------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(PARTITION BY LOCATION ORDER BY MIN (SALARY) DESC) AS RANK_MIN,----------------------------DENSE_Rank employees according to their total sales.
+	DENSE_RANK() OVER(PARTITION BY LOCATION ORDER BY MAX (SALARY) DESC) AS RANK_MAX--------------------------------DENSE_Rank employees according to their total sales.
+	FROM WINDOWS_FUNCTION
+	GROUP BY LOCATION;
+--------------------------CTE + DENSE_RANK _ TOP FIND THE TOP 3 SALARY -------------------
+WITH RANK_FUNCTION AS 
+	(
+		SELECT 
+			FIRSTNAME ,
+			LASTNAME,
+			AGE,
+			DEPARTMENTNAME,
+			LOCATION,
+			SALARY,
+			HIREDATE,
+			UPDATEDDATE,
+			EMPLOYMENTSTATUS,
+			DENSE_RANK() OVER (PARTITION BY DEPARTMENTNAME ORDER BY SALARY DESC) AS NEW_RANK_FUNCTION --------------SINGLE PARTITION TYPE 
+			FROM WINDOWS_FUNCTION
+	)
+SELECT * FROM RANK_FUNCTION
+WHERE NEW_RANK_FUNCTION <= 3 ;
+
+----------------CTE + DENSE_RANK _ TO FIND THE TOP 3 SALARY USING DEPARTMENTNAME AND LOCATION PARTITION -------------------------------
+WITH RANK_FUNCTION AS 
+	(
+		SELECT 
+			FIRSTNAME ,
+			LASTNAME,
+			AGE,
+			DEPARTMENTNAME,
+			LOCATION,
+			SALARY,
+			HIREDATE,
+			UPDATEDDATE,
+			EMPLOYMENTSTATUS,
+			DENSE_RANK() OVER (PARTITION BY DEPARTMENTNAME , LOCATION ORDER BY SALARY DESC) AS NEW_RANK_FUNCTION --------------MULTIPLE  PARTITION TYPE 
+			FROM WINDOWS_FUNCTION
+	)
+SELECT * FROM RANK_FUNCTION
+WHERE NEW_RANK_FUNCTION <= 3 ;
+
+----------------CTE + DENSE_RANK _ TO FIND THE TOP 3 SALARY USING DEPARTMENTNAME AND LOCATION PARTITION -------------------------------
+---------------------------CTE + DENSE_RANK() + CASE -----------------------------------------
+WITH RANK_FUNCTION AS 
+	(
+		SELECT 
+			FIRSTNAME ,
+			LASTNAME,
+			AGE,
+			DEPARTMENTNAME,
+			LOCATION,
+			SALARY,
+			HIREDATE,
+			UPDATEDDATE,
+			EMPLOYMENTSTATUS,
+			DENSE_RANK() OVER (PARTITION BY DEPARTMENTNAME , LOCATION ORDER BY SALARY DESC) AS NEW_RANK_FUNCTION --------------MULTIPLE  PARTITION TYPE 
+			FROM WINDOWS_FUNCTION
+	)
+SELECT * FROM RANK_FUNCTION
+WHERE NEW_RANK_FUNCTION <= 3 ;
+
+
+SELECT * FROM WINDOWS_FUNCTION
