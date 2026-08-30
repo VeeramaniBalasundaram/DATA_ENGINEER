@@ -10980,3 +10980,328 @@ SELECT * FROM AGG_FUNCTION_CTE_WINDOWS_FINAL;
 			MAX(SALARY) OVER (PARTITION BY LOCATION) AS TOAL_MAX_SALARY ,
 			COUNT(SALARY) OVER (PARTITION BY LOCATION) AS TOAL_MAX_SALARY 
 			FROM WINDOWS_FUNCTION
+
+
+--------------------------------------------------DATE 30/08/2026---------------------------------------------------------------------
+
+-----------------------To look at a value from a previous row without using a self-join.-----------------------------
+------- THIS IS NORMAL SYNTAX OF LAG() FUNCTION ------------------------------
+		SELECT 
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME) ,
+		LAG(SALARY) OVER (ORDER BY SALARY DESC) AS LAG_SALARY
+		FROM WINDOWS_FUNCTION
+-----------------THIS IS LAG() with Offset FUNCTION ---------------------******************------------------------
+
+		SELECT 
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		LAG(SALARY , 2) OVER ( ORDER BY SALARY DESC) AS LAG_SALARY_OFFSET --------------- WITH OFFSET FUNCTION 
+		FROM WINDOWS_FUNCTION
+
+----------------------------LAG() with Default Value--------------------*******************-------------------------
+		 
+		SELECT 
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		LAG(SALARY , 2 , 0) OVER ( ORDER BY SALARY DESC) AS LAG_SALARY_OFFSET --------------- WE WILL PUT DEFAULT VALUE IN NULL LOCATION 
+		FROM WINDOWS_FUNCTION
+
+------------------------------------LAG() with PARTITION BY------------------------------------
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		LAG(SALARY , 2 , 0) OVER ( PARTITION BY DEPARTMENTNAME ORDER BY SALARY DESC) AS LAG_SALARY_OFFSET --------------- WE WILL PUT DEFAULT VALUE IN NULL LOCATION 
+		FROM WINDOWS_FUNCTION
+-------------------------------------Previous Salary Difference ⭐----------------------------------
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		SALARY,
+		SALARY - 
+		LAG(SALARY ) OVER (ORDER BY EMPLOYEEID DESC) AS LAG_SALARY_OFFSET --------------- WE WILL PUT DEFAULT VALUE IN NULL LOCATION 
+		FROM WINDOWS_FUNCTION
+
+-------------------Previous Salary Percentage Change THIS IS LITTLE BIT OF COMPLEX QUERY ----------------------
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		SALARY,
+		LAG(SALARY ) OVER (ORDER BY EMPLOYEEID DESC) AS LAG_SALARY,
+		(
+			(	
+				SALARY - 
+				LAG(SALARY ) OVER (ORDER BY EMPLOYEEID DESC)  --------------- WE WILL PUT DEFAULT VALUE IN NULL LOCATION 
+			) * 100 /
+				LAG(SALARY ) OVER (ORDER BY EMPLOYEEID DESC) 
+				
+		) AS SALARY_CHANGED_PERCENTAGE
+		FROM WINDOWS_FUNCTION
+		ORDER BY SALARY DESC 
+-------------------LAG() with Dates ⭐-----------------------------------------------
+
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		HIREDATE,
+		BONUS,
+		LAG(BONUS) OVER (PARTITION BY DEPARTMENTNAME ORDER BY HIREDATE ) AS LAG_DATE
+		FROM WINDOWS_FUNCTION
+
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		HIREDATE,
+		LAG(HIREDATE) OVER (PARTITION BY DEPARTMENTNAME ORDER BY HIREDATE) AS LAG_DATE
+		FROM WINDOWS_FUNCTION
+
+		---------------Detect Changes ⭐⭐⭐------------------------------------------
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		EMPLOYMENTSTATUS,
+		LAG(EMPLOYMENTSTATUS) OVER ( PARTITION BY DEPARTMENTNAME ORDER BY HIREDATE) AS DETECT_CHANGES
+		FROM WINDOWS_FUNCTION
+
+		-----------------LAG() + CASE--------------------------------------------------
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		CASE
+			WHEN SALARY > LAG(SALARY) OVER (ORDER BY SALARY DESC) THEN 'INCRESED'
+			WHEN SALARY < LAG(SALARY) OVER (ORDER BY SALARY DESC) THEN 'DECRESED'
+			ELSE'NOCHANGE'
+		END AS SALARY_STATUS
+		FROM WINDOWS_FUNCTION;
+
+		-----------------LAG() + CTE--------------------------------------------------
+WITH LAG_FUNCTION AS 
+(
+		SELECT 
+		DEPARTMENTNAME AS NEW_NAME,
+		SALARY AS NEW_SALARY,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME) AS MERGED_NAME,
+		CASE
+			WHEN SALARY > LAG(SALARY) OVER (ORDER BY SALARY DESC) THEN 'INCRESED'
+			WHEN SALARY < LAG(SALARY) OVER (ORDER BY SALARY DESC) THEN 'DECRESED'
+			ELSE'NOCHANGE'
+		END AS SALARY_STATUS,
+		LAG(SALARY) OVER (PARTITION BY DEPARTMENTNAME ORDER BY SALARY DESC) AS LAG_SALARY
+		FROM WINDOWS_FUNCTION
+),
+LAG_FUNCTION_FINAL AS 
+(
+	SELECT
+		NEW_NAME,
+		MERGED_NAME,
+		NEW_SALARY,
+		SALARY_STATUS,
+		NEW_SALARY - LAG_SALARY AS SALARY_DIFFERENCE
+		FROM LAG_FUNCTION
+)
+	SELECT 
+		MERGED_NAME,
+		CASE 
+			WHEN SALARY_STATUS = 'INCRESED' THEN '2'
+			WHEN SALARY_STATUS = 'DECRESED' THEN '1'
+			ELSE '0'
+		END AS FINAL_DATA
+		FROM LAG_FUNCTION_FINAL
+	
+
+-----------------------To look at a value from a previous row without using a self-join.-----------------
+------- THIS IS NORMAL SYNTAX OF LEAD() FUNCTION ------------------------------
+		SELECT 
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME) ,
+		LEAD(SALARY) OVER (ORDER BY SALARY DESC) AS LAG_SALARY
+		FROM WINDOWS_FUNCTION
+-----------------THIS IS LEAD() with Offset FUNCTION ---------------------******************-------------
+
+		SELECT 
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		LEAD(SALARY , 2) OVER ( ORDER BY SALARY DESC) AS LAG_SALARY_OFFSET --------------- WITH OFFSET FUNCTION 
+		FROM WINDOWS_FUNCTION
+
+----------------------------LEAD() with Default Value--------------------*******************---------
+		 
+		SELECT 
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		LAG(SALARY , 2 , 0) OVER ( ORDER BY SALARY DESC) AS LAG_SALARY_OFFSET --------------- WE WILL PUT DEFAULT VALUE IN NULL LOCATION 
+		FROM WINDOWS_FUNCTION
+
+------------------------------------LEAD() with PARTITION BY------------------------------------
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		LEAD(SALARY , 2 , 0) OVER ( PARTITION BY DEPARTMENTNAME ORDER BY SALARY DESC) AS LAG_SALARY_OFFSET --------------- WE WILL PUT DEFAULT VALUE IN NULL LOCATION 
+		FROM WINDOWS_FUNCTION
+
+			-----------------LAG() + CASE--------------------------------------------------
+		SELECT 
+		DEPARTMENTNAME,
+		CONCAT_WS('_' , FIRSTNAME , LASTNAME),
+		CASE
+			WHEN SALARY > LEAD(SALARY) OVER (ORDER BY SALARY DESC) THEN 'INCRESED'
+			WHEN SALARY < LEAD(SALARY) OVER (ORDER BY SALARY DESC) THEN 'DECRESED'
+			ELSE'NOCHANGE'
+		END AS SALARY_STATUS
+		FROM WINDOWS_FUNCTION;
+
+------------------------------------------LEAD() + CTE + CASE----------------------------------
+WITH LEAD_FUNCTION AS 
+(
+		SELECT 
+			CONCAT_WS('_' , FIRSTNAME , LASTNAME) AS MERGED_NAME,
+			GENDER AS NEW_GENDER,
+			AGE AS NEW_AGE,
+			SALARY,
+			DEPARTMENTNAME AS NEW_DEPARTMENT,
+			LOCATION AS NEW_LOCATION,
+			LEAD(SALARY , 3) OVER (ORDER BY SALARY DESC) AS LEAD_SALARY
+			FROM WINDOWS_FUNCTION
+),
+LEAD_FUNCTION_FINAL AS 
+(
+SELECT 
+	MERGED_NAME,
+	NEW_GENDER,
+	NEW_AGE,
+	NEW_DEPARTMENT,
+	NEW_LOCATION,
+	CASE
+		WHEN LEAD_SALARY IS NULL THEN  'LAST_RECORD'
+		WHEN LEAD_SALARY > SALARY THEN 'NEXT_SALARY_HIGHER'
+		WHEN LEAD_SALARY < SALARY THEN 'NEXT_SALARY_LOWER'
+		ELSE'NO_CHANGE'
+	END AS NEW_LEAD_FUNCTION
+	FROM LEAD_FUNCTION
+)
+SELECT * FROM LEAD_FUNCTION_FINAL
+WHERE NEW_LEAD_FUNCTION = 'LAST_RECORD'
+
+
+--------------------=======================================------------------------------------===============================
+		/*FIRST_VALUE()
+		→ Returns the first value from the defined window/order.
+
+		LAST_VALUE()
+		→ Returns the last value from the defined window/order.
+		*/
+--------------------=======================================------------------------------------===============================
+
+	------------------ THIS IS NORMAL FIRS VALUE ORDER BU SALARY DESC ----------------------------------------	
+		SELECT 
+			CONCAT_WS('__' , FIRSTNAME , LASTNAME) AS NEW_MERGED_NAME,
+			IIF (GENDER = 'M', 'MALE' , 'FEMALE') NEW_GENDER,
+			TRIM(LOCATION) AS SPACED_REMOVED,
+			UPPER(JOBTITLE) AS UPPER_JOB,
+			SALARY,
+			BONUS,
+			CAST(HIREDATE AS DATE) AS NEW_HIRE_DATE,
+			STATUS,
+			FIRST_VALUE(SALARY) OVER (ORDER BY SALARY) AS FIRST_VALAUE_FUNCTION  ------------ THIS IS ONLY ORDER BY QUERY 
+			FROM EMPLOYEES_WINDOWS
+
+-------------------- THIS IS USING WITH PARITION BY OORDER BY SALAR DESC --------------------------------
+
+	SELECT 
+			CONCAT_WS('__' , FIRSTNAME , LASTNAME) AS NEW_MERGED_NAME,
+			IIF (GENDER = 'M', 'MALE' , 'FEMALE') NEW_GENDER,
+			TRIM(LOCATION) AS SPACED_REMOVED,
+			UPPER(JOBTITLE) AS UPPER_JOB,
+			SALARY,
+			BONUS,
+			CAST(HIREDATE AS DATE) AS NEW_HIRE_DATE,
+			STATUS,
+			FIRST_VALUE(SALARY) OVER (PARTITION BY JOBTITLE ORDER BY SALARY) AS FIRST_VALAUE_FUNCTION  --------------- THIS WITH PARTITON QUERY 
+			FROM EMPLOYEES_WINDOWS;
+------------------------------------ WITH CASE AND FIRST() VALUE FUNCTION ---------------------------------
+	
+WITH FIRST_VALUE_FUNCION AS
+(
+	SELECT 
+			CONCAT_WS('__' , FIRSTNAME , LASTNAME) AS NEW_MERGED_NAME,
+			IIF (GENDER = 'M', 'MALE' , 'FEMALE') NEW_GENDER,
+			TRIM(LOCATION) AS SPACED_REMOVED,
+			UPPER(JOBTITLE) AS UPPER_JOB,
+			SALARY AS NEW_SALARY,
+			BONUS AS NEW_BONUS,
+			CAST(HIREDATE AS DATE) AS NEW_HIRE_DATE,
+			STATUS AS NEW_SATUS,
+			FIRST_VALUE (SALARY) OVER (PARTITION BY JOBTITLE ORDER BY SALARY) AS FIRST_VALAUE_FUNCTION , --------------- THIS WITH PARTITON QUERY 
+			SALARY - FIRST_VALUE (SALARY) OVER (PARTITION BY JOBTITLE ORDER BY SALARY) AS SALARY_MINUS_DATA 
+			FROM EMPLOYEES_WINDOWS
+),
+
+FINAL_FIRST_FUNCTION AS 
+(
+	SELECT 
+			NEW_MERGED_NAME,
+			NEW_GENDER,
+			SPACED_REMOVED,
+			UPPER_JOB,
+			NEW_SALARY,
+			NEW_HIRE_DATE,
+			FIRST_VALAUE_FUNCTION,
+			SALARY_MINUS_DATA,
+			CASE 
+				WHEN SALARY_MINUS_DATA  = 0 THEN 'FIRST_VALUE'
+				WHEN SALARY_MINUS_DATA > FIRST_VALAUE_FUNCTION THEN 'HIGH'
+				WHEN SALARY_MINUS_DATA < FIRST_VALAUE_FUNCTION THEN 'LOW'
+				ELSE 'NO_CHANGE'
+			END AS FINAL_DATA
+			FROM FIRST_VALUE_FUNCION
+)
+
+SELECT * FROM FINAL_FIRST_FUNCTION
+WHERE FINAL_DATA = 'FIRST_VALUE'
+
+
+--------	LAST_VALUE()----------------------------------
+--------	→ Returns the last value from the defined window/order.-----------------
+-----	*/-----------------------------------
+------------------ THIS IS NORMAL FIRS VALUE ORDER BU SALARY DESC ----------------------------------------	
+
+------- THE MAIN CONCEPT IN LAST() IS ----------------
+/*
+ROWS BETWEEN <START> AND <END> -----------THE GENERAL STRUCTURE OF THE LAST_VALUE QUERY-------
+ROWS BETWEEN CURRENT ROW AND CURRENT ROW ---------------- CURRENT ROW ONLY --------------
+ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW ------------- FROM BEGINNING  TO CURRENT ROW ----------------
+ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING ------------ BEGINNING CURRENT ROW END-----------------
+ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING ---------- ENTIRE WINDOW ROW-------------------
+ROWS BETWEEN 1 PRECEDING AND CURRENT ROW ------------------------ Previous 1 row → current row ---------
+ROWS BETWEEN 2 PRECEDING AND CURRENT ROW ----------------------- Previous 2 rows → current row----------------
+ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING ----------------------Current row → next 1 row-------------------
+ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING --------------------------Current row → next 2 rows-----------------
+ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING --------------------Previous 2 rows → next 2 rows --------------
+*/
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------BASIC — Entire Window-------------------------------------------------------
+		SELECT 
+			CONCAT_WS('_' , FIRSTNAME , LASTNAME) AS NEW_NAME,
+			SALARY,
+				LAST_VALUE(SALARY) OVER (ORDER BY SALARY 
+				ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS LAST_VALUE_FUNCTION  ------------ THIS IS THE LAS_VALUE_FUNCTION () ---Every row can see the entire window.
+			FROM EMPLOYEES_WINDOWS
+
+-------------------- THIS IS USING WITH PARITION BY OORDER BY SALAR DESC --------------------------------
+
+		SELECT 
+			CONCAT_WS('_' , FIRSTNAME , LASTNAME) AS NEW_NAME,
+			SALARY,
+			JOBTITLE,
+				LAST_VALUE(SALARY) OVER ( PARTITION BY JOBTITLE  ORDER BY JOBTITLE 
+				ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS LAST_VALUE_FUNCTION  ------------ THIS IS THE LAS_VALUE_FUNCTION () --Every row can see the entire window.
+			FROM EMPLOYEES_WINDOWS
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------BASIC — Beginning → Current Row-------------------------------------------------------
+--------------This is the classic running total.------------------
+		SELECT 
+			CONCAT_WS('_' , FIRSTNAME , LASTNAME) AS NEW_NAME,
+			SALARY,
+			JOBTITLE,
+				LAST_VALUE(SALARY) OVER ( ORDER BY  EMPLOYEEID
+				ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS LAST_VALUE_FUNCTION  ------------ This is the classic running total.
+			FROM EMPLOYEES_WINDOWS
+
+
+		SELECT * FROM EMPLOYEES_WINDOWS 
