@@ -362,25 +362,25 @@ WITH DATE_PART_FUNCTION AS
 			END AS CASE_DAY_MONTH_YEAR
 			FROM DATE_TIME_FUNCTION
 ------------------ IMPORTANT DIFFERENCE --------------------------
-/*
-		DAY()
-			→ Returns numeric day.
-		MONTH()
-			→ Returns numeric month.
+			/*
+					DAY()
+						→ Returns numeric day.
+					MONTH()
+						→ Returns numeric month.
 		
-		YEAR()
-			→ Returns numeric year.
-		DATEPART()
-			→ Returns a numeric date part.
-		DATENAME()
-			→ Returns a text date part.
-		------------------ FINAL REMEMBER --------------------------
-		DAY(date)       → 29
-		MONTH(date)     → 8
-		YEAR(date)      → 2026
-		DATEPART(MONTH, date) → 8
-		DATENAME(MONTH, date) → August
-*/
+					YEAR()
+						→ Returns numeric year.
+					DATEPART()
+						→ Returns a numeric date part.
+					DATENAME()
+						→ Returns a text date part.
+					------------------ FINAL REMEMBER --------------------------
+					DAY(date)       → 29
+					MONTH(date)     → 8
+					YEAR(date)      → 2026
+					DATEPART(MONTH, date) → 8
+					DATENAME(MONTH, date) → August
+			*/
 -----------------------------------EOMONTH ---------------------------
 	SELECT
 		HIREDATE,
@@ -468,5 +468,316 @@ WITH DATE_PART_FUNCTION AS
 		| NULLIF   | NULLIF(expression1, expression2)    | Return NULL when two values are equal |
 
 	*/
+------------------------------------------------| ISNULL   | ISNULL(expression, replacement)     | Replace NULL with a value |------------------------------
+
+	SELECT 
+		ISNULL(FIRSTNAME , 'NAME NOT AVAILABLE'), ---------------- THIS IS USED TO TO REMOVE THE NULL AND PUT THE VALUE WHICH IS MENTIONED 
+		CASE 
+			WHEN FIRSTNAME IS NULL THEN '0'
+			ELSE FIRSTNAME
+		END,
+		ISNULL(SALARY , 0) AS UPDATED_VERSION, ---------------- THIS IS USED TO TO REMOVE THE NULL AND PUT THE VALUE WHICH IS MENTIONED 
+		ISNULL(SALARY , 0) + ISNULL(BONUS , 0) AS TOTAL_INCOME , ---------------- THIS IS USED TO TO REMOVE THE NULL AND PUT THE VALUE WHICH IS MENTIONED 
+		CASE 
+			WHEN SALARY IS NULL THEN '0'  --------- THIS IS CASE SAME AS ISNULL CONDITION BOTH WILL GIVE THE SAME OUTPUT 
+			ELSE SALARY
+		END AS NEW_SALARY,
+		CASE 
+			WHEN BONUS IS NULL THEN '0'
+			ELSE BONUS
+		END AS NEW_BONUS
+		FROM NULL_FUNCTIONS_PRACTICE
+
+		            ------------------------------------COALESCE()----------------------------------------------------
+-----------------------------------COALESCE() checks values from left to right and returns the first non-NULL value.---------------------
+
+	SELECT 
+		LASTNAME,
+		DEPARTMENTNAME,
+		COALESCE(LASTNAME , DEPARTMENTNAME) -----------------------------COALESCE() returns the first non-NULL value from a list of expressions.-------------
+		FROM NULL_FUNCTIONS_PRACTICE
+
+	SELECT 
+		SALARY,
+		BONUS,
+		EMAIL,
+		TARGET_AMOUNT,
+		COALESCE(SALARY , BONUS , EMAIL, TARGET_AMOUNT , 'NO_VALUE') AS NULL_CLEANING ----------COALESCE() returns the first non-NULL value from a list of expressions.---------
+		FROM NULL_FUNCTIONS_PRACTICE 
+
+	SELECT 
+	EMAIL,
+	EMAIL,
+	WORK_EMAIL,
+	COALESCE(EMAIL,EMAIL,WORK_EMAIL,'MAIN_NOT_AVAILABLE') -----------------------So if all three email columns are NULL, the result will be: 'MAIN_NOT_AVAILABLE'
+																			----- IF ANY COLUMN VALUE VAILABLE THAT COLUM DATA WILL COME TO THE OUTPUT 
+	FROM NULL_FUNCTIONS_PRACTICE 
+
+	SELECT 
+	COALESCE(BONUS , 0)  ----------------- THIS IS SINGLE COLUMN DATA CLEANING 
+	FROM NULL_FUNCTIONS_PRACTICE 
+
+
+
+--------------------------------NULLIF() — Beginner Level--------------------------------------
+------NULLIF() is mainly used when you want to turn a particular value into NULL.--------------
 
 	SELECT * FROM NULL_FUNCTIONS_PRACTICE
+
+	SELECT 
+	TARGET_AMOUNT,
+	BONUS,
+	NULLIF(BONUS , 0), --------------------"If the value in the column matches the value I mention in NULLIF(), it returns NULL. Otherwise, it returns the original column value."
+	NULLIF(TARGET_AMOUNT , 0) -------------"If the value in the column matches the value I mention in NULLIF(), it returns NULL. Otherwise, it returns the original column value."
+	FROM NULL_FUNCTIONS_PRACTICE
+
+
+------------------------------------DATA TYPE CONVERSION FUNCTIONS--------------------------------
+ -----------------------------------------Function	Syntax	Main Purpose--------------------------
+----------------------------CAST	CAST(expression AS datatype)	Convert data type-------------
+
+	SELECT * FROM DATE_TIME_FUNCTION 
+		SELECT 
+			CAST(DATEOFBIRTH AS DATETIME) AS DATE_TO_DATETIME_CONVERSION,
+			CAST(HIREDATE AS DATE) AS DATEIME_TO_DATE_CONVERSION,
+			CAST(JOININGDATE AS DATE) AS DATEIME_TO_DATE_CONVERSION,
+			CAST(CAST(JOININGDATE AS DATE) AS VARCHAR(30)) AS DATEIME_TO_DATE_CONVERSION,
+			CAST(CAST(PERFORMANCEREVIEWDATE AS DATE) AS VARCHAR(30)) AS DATEIME_TO_DATE_CONVERSION,
+			CAST(PROMOTIONDATE AS VARCHAR(30))  AS VARCHAR_DATA,
+			CAST(CAST(CONTRACTENDDATE AS datetime2) AS VARCHAR(30)) AS DATEIME_TO_DATE_CONVERSION
+			FROM DATE_TIME_FUNCTION;
+
+
+
+		SELECT 
+			CAST(AGE AS decimal(10,2) ) AS DATA_TYPE_CHANGED_DECIMAL,
+			CAST(SALARY AS decimal(10,2)) AS DATA_TYPE_CHANGED_SALARY,
+			CAST(EXPERIENCEYEARS AS DECIMAL(10,2)) AS DATA_TYPE_CHANGED_EXPERIENCE,
+			CAST(HIREDATE AS DATETIME) AS DATETIME_CHANGED,
+			CAST(UPDATEDDATE AS DATETIME2) AS DATEIME_2_CHANGED
+			FROM WINDOWS_FUNCTION
+
+
+		SELECT 
+			(TRIM(UPPER(CONCAT_WS('_' , FIRSTNAME , LASTNAME)))) AS NEW_NAME,
+			CASE
+				WHEN GENDER  = 'M' THEN 'MALE'
+				ELSE 'FEMALE'
+			END AS NEW_GENDER,
+			CASE 
+				WHEN CAST(AGE AS VARCHAR(30)) < 18 THEN 'AGE_NOT_APPLICABLE'
+				WHEN CAST(AGE AS VARCHAR(30)) BETWEEN 19 AND 50 THEN 'MIDDLE_AGE'
+				ELSE 'HIGH_AGE'
+			END AS NEW_AGE,
+			UPPER(DEPARTMENTNAME),
+			UPPER(LOCATION),
+			CASE 
+				WHEN CAST(SALARY AS DECIMAL(10,2)) < 50000 THEN 'LOW_SALARY'
+				WHEN CAST(SALARY AS DECIMAL(10,2)) BETWEEN 50000 AND 150000 THEN 'MIDDLE_SALARY'
+				ELSE 'HIGH_SALARY'
+			END AS NEW_SALARY,
+			CASE 
+				WHEN CAST(BONUS AS BIGINT) < 10000 THEN 'LOW_BONUS'
+				WHEN CAST(BONUS AS BIGINT) BETWEEN 10000 AND 30000 THEN 'MIDDLE_BONUS'
+				ELSE 'HIGH_BONUS'
+			END AS NEW_BONUS,
+			CASE 
+				WHEN CAST(HIREDATE AS DATETIME2) < '2023-06-05' THEN 'OLD' 
+				ELSE 'NEW'
+			END AS NEW_HIREDATE,
+			CAST(UPDATEDDATE AS DATETIME2) AS NEW_UPDATE_DATE,
+			ISNULL(PERFORMANCESCORE , 0) AS NEW_SCORE_ISNULL,
+			COALESCE (CAST(PERFORMANCESCORE AS DECIMAL (10,2)) , 0) AS COAL_ESCE_FUNCTIOIN,
+			COALESCE (CAST(PERFORMANCESCORE AS DECIMAL(10,2)) , PROJECTCOUNT) AS DOUBLE_COLUMN_COAL_ESCE,
+			NULLIF (CAST (PROJECTCOUNT AS DECIMAL(10, 2)) , 6 ) AS NEW_COUNT
+			FROM WINDOWS_FUNCTION
+
+
+------------------------------------DATA TYPE CONVERSION FUNCTIONS--------------------------------
+ -----------------------------------------Function	Syntax	Main Purpose--------------------------
+----------------------------   TRY_CAST	(expression AS datatype)	Convert data type-------------
+
+											/*TRY_CAST()
+											   ↓
+											Conversion successful → value
+											Conversion failed     → NULL ✅
+											*/
+	SELECT * FROM DATE_TIME_FUNCTION 
+		SELECT 
+			TRY_CAST(DATEOFBIRTH AS DATETIME) AS DATE_TO_DATETIME_CONVERSION,
+			TRY_CAST(HIREDATE AS DATE) AS DATEIME_TO_DATE_CONVERSION,
+			TRY_CAST(JOININGDATE AS DATE) AS DATEIME_TO_DATE_CONVERSION,
+			TRY_CAST(TRY_CAST(JOININGDATE AS DATE) AS VARCHAR(30)) AS DATEIME_TO_DATE_CONVERSION,
+			TRY_CAST(TRY_CAST(PERFORMANCEREVIEWDATE AS DATE) AS VARCHAR(30)) AS DATEIME_TO_DATE_CONVERSION,
+			TRY_CAST(PROMOTIONDATE AS VARCHAR(30))  AS VARCHAR_DATA,
+			TRY_CAST(TRY_CAST(CONTRACTENDDATE AS datetime2) AS VARCHAR(30)) AS DATEIME_TO_DATE_CONVERSION
+			FROM DATE_TIME_FUNCTION;
+
+		
+		SELECT 
+			TRY_CAST(AGE AS decimal(10,2) ) AS DATA_TYPE_CHANGED_DECIMAL,
+			TRY_CAST(SALARY AS decimal(10,2)) AS DATA_TYPE_CHANGED_SALARY,
+			TRY_CAST(EXPERIENCEYEARS AS DECIMAL(10,2)) AS DATA_TYPE_CHANGED_EXPERIENCE,
+			TRY_CAST(HIREDATE AS DATETIME) AS DATETIME_CHANGED,
+			TRY_CAST(UPDATEDDATE AS DATETIME2) AS DATEIME_2_CHANGED
+			FROM WINDOWS_FUNCTION
+
+
+		
+		SELECT 
+			(TRIM(UPPER(CONCAT_WS('_' , FIRSTNAME , LASTNAME)))) AS NEW_NAME,
+			CASE
+				WHEN GENDER  = 'M' THEN 'MALE'
+				ELSE 'FEMALE'
+			END AS NEW_GENDER,
+			CASE 
+				WHEN TRY_CAST(AGE AS VARCHAR(30)) < 18 THEN 'AGE_NOT_APPLICABLE'
+				WHEN TRY_CAST(AGE AS VARCHAR(30)) BETWEEN 19 AND 50 THEN 'MIDDLE_AGE'
+				ELSE 'HIGH_AGE'
+			END AS NEW_AGE,
+			UPPER(DEPARTMENTNAME),
+			UPPER(LOCATION),
+			CASE 
+				WHEN TRY_CAST(SALARY AS DECIMAL(10,2)) < 50000 THEN 'LOW_SALARY'
+				WHEN TRY_CAST(SALARY AS DECIMAL(10,2)) BETWEEN 50000 AND 150000 THEN 'MIDDLE_SALARY'
+				ELSE 'HIGH_SALARY'
+			END AS NEW_SALARY,
+			CASE 
+				WHEN TRY_CAST(BONUS AS BIGINT) < 10000 THEN 'LOW_BONUS'
+				WHEN TRY_CAST(BONUS AS BIGINT) BETWEEN 10000 AND 30000 THEN 'MIDDLE_BONUS'
+				ELSE 'HIGH_BONUS'
+			END AS NEW_BONUS,
+			CASE 
+				WHEN TRY_CAST(HIREDATE AS DATETIME2) < '2023-06-05' THEN 'OLD' 
+				ELSE 'NEW'
+			END AS NEW_HIREDATE,
+			TRY_CAST(UPDATEDDATE AS DATETIME2) AS NEW_UPDATE_DATE,
+			ISNULL(PERFORMANCESCORE , 0) AS NEW_SCORE_ISNULL,
+			COALESCE (TRY_CAST(PERFORMANCESCORE AS DECIMAL (10,2)) , 0) AS COAL_ESCE_FUNCTIOIN,
+			COALESCE (TRY_CAST(PERFORMANCESCORE AS DECIMAL(10,2)) , PROJECTCOUNT) AS DOUBLE_COLUMN_COAL_ESCE,
+			NULLIF (TRY_CAST (PROJECTCOUNT AS DECIMAL(10, 2)) , 6 ) AS NEW_COUNT
+			FROM WINDOWS_FUNCTION
+
+			SELECT 
+				CAST(FIRSTNAME AS INT) AS CAST_CHECKING -----------------------------WE CAN'T CAHNGE THE STING VALUE TO INT OR DATE RELATED DATATYPE------ SO CAST WILL COME ERROR 
+				FROM WINDOWS_FUNCTION
+
+			
+			SELECT 
+				TRY_CAST(FIRSTNAME AS INT) AS CAST_CHECKING  ------------- SAME WE CAN'T CHANGE THE STRING VALUE TO INT BUT ERROR WILL NOT SHOW INSTEAD OF ERROR NULL VALUE WILL COME 
+				FROM WINDOWS_FUNCTION
+
+-----------------------------------------------------CONVERT() — Simple Understanding----------------------------------------
+-----------------------------------------------------CONVERT() changes one data type into another data type.-----------------
+--------------------------------------------------------CONVERT(data_type, expression)---------------------------------------
+
+						/*
+						4. Where do we use CONVERT?
+						Use CONVERT() when you need SQL Server-specific conversion, especially date/time formatting with STYLE.
+						CONVERT()  → datatype conversion + date STYLE ⭐⭐⭐⭐⭐
+						*/
+
+			SELECT 
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 101) AS STYLE_101,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 102) AS STYLE_102,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 103) AS STYLE_103,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 104) AS STYLE_104,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 105) AS STYLE_105,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 106) AS STYLE_106,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 107) AS STYLE_107,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 112) AS STYLE_112,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 120) AS STYLE_120,
+			CONVERT(VARCHAR(30), DATEOFBIRTH, 121) AS STYLE_121
+			FROM DATE_TIME_FUNCTION;
+
+	/*
+
+							   CONVERT STYLE
+								   ↓
+					┌──────────────┴──────────────┐
+					↓                             ↓
+			DATE/DATETIME → VARCHAR        VARCHAR → DATE/DATETIME
+					↓                             ↓
+			   FORMAT IT                    READ/INTERPRET IT
+					↓                             ↓
+			  103 = DD/MM/YYYY              103 = DD/MM/YYYY
+			  112 = YYYYMMDD                112 = YYYYMMDD
+			  120 = YYYY-MM-DD HH:MI:SS     120 = YYYY-MM-DD HH:MI:SS
+  
+  */
+
+  -------------------------------DATE FIELD ----------------------------------------------
+  SELECT
+	CONVERT(VARCHAR(200) , DATEOFBIRTH , 103) AS STYLE_103, -------- OUPUT ROW -----  07/04/2003 
+	CONVERT(VARCHAR(200) , DATEOFBIRTH , 105) AS STYLE_105, -------- OUPUT ROW -----  07-04-2003
+	CONVERT(VARCHAR(200) , DATEOFBIRTH , 112) AS STYLE_112, -------- OUPUT ROW -----   20030407
+	CONVERT(VARCHAR(200) , DATEOFBIRTH , 120) AS STYLE_120, -------- OUPUT ROW -----  2003-04-07
+	CONVERT(VARCHAR(200) , DATEOFBIRTH , 121) AS STYLE_121 -------- OUPUT ROW -----   2003-04-07
+	FROM DATE_TIME_FUNCTION
+-------------------------------DATE_TIME_2 FIELD--------------------------------------------
+  SELECT
+	CONVERT(VARCHAR(200) , HIREDATE , 103) AS STYLE_103, -------- OUPUT ROW -----  07/04/2003 
+	CONVERT(VARCHAR(200) , HIREDATE , 105) AS STYLE_105, -------- OUPUT ROW -----  07-04-2003
+	CONVERT(VARCHAR(200) , HIREDATE , 112) AS STYLE_112, -------- OUPUT ROW -----   20030407
+	CONVERT(VARCHAR(200) , HIREDATE , 120) AS STYLE_120, -------- OUPUT ROW -----  2021-04-15 08:30:00
+	CONVERT(VARCHAR(200) , HIREDATE , 121) AS STYLE_121 -------- OUPUT ROW -----   2021-04-15 08:30:00.0000000
+	FROM DATE_TIME_FUNCTION
+
+
+	-------------------------------VARCHAER(200) TTO DATE --------------------------------------------
+  SELECT
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 103) AS STYLE_103, -------- OUPUT ROW -----  07/04/2003 
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 105) AS STYLE_105, -------- OUPUT ROW -----  07-04-2003
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 112) AS STYLE_112, -------- OUPUT ROW -----   20030407
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 120) AS STYLE_120, -------- OUPUT ROW -----  2021-04-15 08:30:00
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 121) AS STYLE_121 -------- OUPUT ROW -----   2021-04-15 08:30:00.0000000
+	FROM DATE_TIME_FUNCTION
+
+-----------------------------------------------------TRY_CONVERT() — Simple Understanding----------------------------------------
+-----------------------------------------------------TRY_CONVERT() changes one data type into another data type.-----------------
+--------------------------------------------------------TRY_CONVERT(data_type, expression)---------------------------------------
+
+						/*
+						4. Where do we use CONVERT?
+						Use TRY_CONVERT() when you need SQL Server-specific conversion, especially date/time formatting with STYLE.
+						TRY_CONVERT()  → datatype conversion + date STYLE ⭐⭐⭐⭐⭐
+	*/
+
+
+	 -------------------------------DATE FIELD ----------------------------------------------
+  SELECT
+	TRY_CONVERT(VARCHAR(200) , DATEOFBIRTH , 103) AS STYLE_103, -------- OUPUT ROW -----  07/04/2003 
+	TRY_CONVERT(VARCHAR(200) , DATEOFBIRTH , 105) AS STYLE_105, -------- OUPUT ROW -----  07-04-2003
+	TRY_CONVERT(VARCHAR(200) , DATEOFBIRTH , 112) AS STYLE_112, -------- OUPUT ROW -----   20030407
+	TRY_CONVERT(VARCHAR(200) , DATEOFBIRTH , 120) AS STYLE_120, -------- OUPUT ROW -----  2003-04-07
+	TRY_CONVERT(VARCHAR(200) , DATEOFBIRTH , 121) AS STYLE_121 -------- OUPUT ROW -----   2003-04-07
+	FROM DATE_TIME_FUNCTION
+-------------------------------DATE_TIME_2 FIELD--------------------------------------------
+  SELECT
+	TRY_CONVERT(VARCHAR(200) , HIREDATE , 103) AS STYLE_103, -------- OUPUT ROW -----  07/04/2003 
+	TRY_CONVERT(VARCHAR(200) , HIREDATE , 105) AS STYLE_105, -------- OUPUT ROW -----  07-04-2003
+	TRY_CONVERT(VARCHAR(200) , HIREDATE , 112) AS STYLE_112, -------- OUPUT ROW -----   20030407
+	TRY_CONVERT(VARCHAR(200) , HIREDATE , 120) AS STYLE_120, -------- OUPUT ROW -----  2021-04-15 08:30:00
+	TRY_CONVERT(VARCHAR(200) , HIREDATE , 121) AS STYLE_121 -------- OUPUT ROW -----   2021-04-15 08:30:00.0000000
+	FROM DATE_TIME_FUNCTION
+
+
+	-------------------------------VARCHAER(200) TTO DATE --------------------------------------------
+  SELECT
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 103) AS STYLE_103, -------- OUPUT ROW -----  07/04/2003 
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 105) AS STYLE_105, -------- OUPUT ROW -----  07-04-2003
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 112) AS STYLE_112, -------- OUPUT ROW -----   20030407
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 120) AS STYLE_120, -------- OUPUT ROW -----  2021-04-15 08:30:00
+	TRY_CONVERT(DATETIME2 , PROMOTIONDATE , 121) AS STYLE_121 -------- OUPUT ROW -----   2021-04-15 08:30:00.0000000
+	FROM DATE_TIME_FUNCTION
+
+
+	---------------------------------PARSE() converts a string into a specified data type using a particular culture/language format.
+
+
+SELECT PARSE('31/08/2026' AS DATE USING 'en-GB');
+
+SELECT PARSE('08/31/2026' AS DATE USING 'en-US');
+
+SELECT PARSE('1,234.56' AS DECIMAL(10,2) USING 'en-US');
+
