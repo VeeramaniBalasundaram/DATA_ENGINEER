@@ -419,4 +419,54 @@ WITH DATE_PART_FUNCTION AS
 		ISDATE(CAST(CAST(LASTLOGINDATE AS DATE )AS VARCHAR(30))) AS VALID_DATE ---- THIS IS DATETIME FIELD -- SO TO TIME CONVERSION USED FIRST CONVERSION IS TO CHANGE THE DATE AND NEXT CONVERSION IS TO CHANGE THE VARCHAR
 		FROM DATE_TIME_FUNCTION
 	
+	
+	
+	-----------------Yes. For Data Engineering, just learn the basic usage of IIF() and CHOOSE().--------------------------------------
+	-------------------------------------- THIS WILL NOT USED IN DATA ENGINEERING - --- BECAUSE MOSTLY USED CASE ONLY ---------------
+	
+	
+	SELECT * FROM EMPLOYEES_WINDOWS
 
+	SELECT 
+		IIF(GENDER = 'M' , 'MALE' , 'FEMALE') AS IFF_LOGIC,
+		IIF(STATUS = 'ACTIVE' , 'YES', 'NO') AS IIF_SATUS,
+		IIF	(
+				SALARY < 100000 , 'LOW' ,
+					IIF ( 
+							SALARY BETWEEN 100000 AND 150000 , 'MEDIUM'    , 'HIGH' 
+						)			
+			) AS SALARY_CATEGORY
+		FROM EMPLOYEES_WINDOWS;
+
+		
+	SELECT 
+	GENDER,
+	CHOOSE
+		( 
+			CASE
+			WHEN GENDER = 'M' THEN 1 ----------------- 1 MENAS WILL CHECK THE 'MALE' 
+			WHEN GENDER = 'F' THEN 2 ----------------- 2 MEANS WILL CHECK THE 'FEMALE'
+			END ,
+			'MALE', ------- CASE 1 OUT 
+			'FEMALE'------- CASE 2 OUT
+		)  AS NEW_GENDER
+	FROM EMPLOYEES_WINDOWS
+
+	SELECT 
+	GENDER,
+	CHOOSE(
+		CHARINDEX(GENDER , 'MF') , 'MALE' , 'FEMALE')
+	FROM EMPLOYEES_WINDOWS
+	
+	-------------------------------------------------------------		-----------------
+	/* 
+	
+			| Function | Syntax                              | Main Purpose |
+		|----------|-------------------------------------|--------------|
+		| ISNULL   | ISNULL(expression, replacement)     | Replace NULL with a value |
+		| COALESCE | COALESCE(value1, value2, ...)       | Return the first non-NULL value |
+		| NULLIF   | NULLIF(expression1, expression2)    | Return NULL when two values are equal |
+
+	*/
+
+	SELECT * FROM NULL_FUNCTIONS_PRACTICE
