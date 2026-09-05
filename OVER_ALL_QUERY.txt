@@ -12213,8 +12213,7 @@ WHERE TOTAL_RECORDS = 1
 
 	SELECT COUNT(*)  FROM GLOBAL_SOURCE_STAGING
 	SELECT COUNT(*) FROM GLOBAL_SOURCE_FINAL
-
-----------------------------------------------------------DATE : 05-09-2026------------------------------------------------
+---------------------------------------------------------DATE : 05-09-2026------------------------------------------------
 
 ---------------------------------------------------------DATA ELANING PROCESS---------------------------------------------
 	SELECT 
@@ -12372,12 +12371,52 @@ WHERE TOTAL_RECORDS = 1
 			WHEN HIREDATE < '1900-01-01' THEN 'INVALID_DATE_FORMAT'
 			WHEN HIREDATE <= CAST(GETDATE() AS DATE) THEN ' BUSINESS_VALUE_OK'
 			ELSE'OK'
-		END AS LAST_HIREDATE_CLEANED
+		END AS LAST_HIREDATE_CLEANED,
+		
+
+	------NULL, invalid timestamp, future timestamp, old timestamp, date/time format, logical relationship with other dates----
+	------------------ UPDATEDDATETIME_CHECKING_(DATA_CLEANING_PROCESS)-------------------------------------------------------
+		UPDATEDDATETIME,
+		CASE 
+			WHEN UPDATEDDATETIME IS NULL THEN 'UPDATE_DATE_IS_NULL'
+			WHEN TRY_CONVERT(DATETIME , UPDATEDDATETIME) IS NULL THEN 'DATETIME_IS_NULL'
+			WHEN UPDATEDDATETIME > CAST(GETDATE() AS DATE) THEN 'FUTURE_DATE_NOT_VALID'
+			WHEN UPDATEDDATETIME < '2000-01-01' THEN 'OLD_DATE_FORMAT_NOTVALID'
+			WHEN TRY_CONVERT(VARCHAR(30) , UPDATEDDATETIME, 120) IS NULL THEN 'THIS_IS_NOT_DATETIME_FORMAT'
+			WHEN UPDATEDDATETIME < CAST(GETDATE() AS DATE) THEN 'LOGICAL_RELASTIONSHIP_WITH_OTHER_DATES'
+			ELSE'OK'
+		END AS LAST_UPDATEDDATETIME_CLEANED	
+	-----------------------------NULL, allowed values 0/1, invalid values--------------------------------------------------
+	--------------------------IS/ACTIVE-----(DATA_CLEANING_PROCESS)--------------------------------------------------------
+	/*
+	----------------THIS IS FOR TESTING ONLY BECAUSE THE TABLE IS NOT AVAILBLE IN THIS DATABASE----------------------------
+		ISACTIVE,
+		CASE 
+			WHEN ISACTIVE IS NULL THEN 'NULL_VALUES_AVAILABLE'
+			WHEN ISACTIVE > 1 THEN 'INVALID_VALUES'
+			WHEN ISACTIVE < 0 THEN 'NEGATIVE_VALUES'
+			WHEN ISACTIVE IN (0,1) THEN 'ALLOWED'
+			WHEN ISACTIVE NOT IN (0,1) THEN 'INVALID'
+			ELSE'OK'
+		END AS LAST_ISACTIVE_CLEANED
+
+	*/
+	--------------------------------NULL, negative, zero, unrealistic range, numeric validity-------------------------------
+	--------------------------------AGE_DATA_CLEANIG_PROCESS-CHECKING ------------------------------------------------------
+	/*
+	--------------------------------THIS IS FOR TESTING ONLY BECAUSE AGE IS NOT AVAILABLE IN THIS DATABASE-----------------
+		AGE,
+		CASE
+			WHEN AGE IS NULL THEN 'AGE_COLUMN_NULL'
+			WHEN AGE < 0 THEN 'NEGATIVE_VALUE'
+			WHEN AGE = 0 THEN 'AGE_IS_ZERO'
+			WHEN AGE > 100 THEN 'UNREALISTICS_RANGE'
+			WHEN AGE >= 0 AND AGE <=100 THEN 'VALID_AGE'
+			ELSE'OK'
+		END AS LAST_AGE_CLEANED
+	*/
 		FROM DATA_CLEANING;
 		SELECT * FROM DATA_CLEANING
-
-
-
 
 
 
