@@ -12836,11 +12836,34 @@ DROP TABLE IF EXISTS #TEMP_TABLE_INTO_CHECKING; ----------- THIS QUERY IS USED F
 				BATCHID
 				FROM MNC_DATA
 				WHERE STATUS = 'ACTIVE' AND CITY ='DELHI' ----------------------- --------------- THIS IS USED FOR TO MODIFY THE EXISTING VIEW ------------------------
-
 	-------------- DROP STATEMENT---------- IT IS USED FOR TO DROP THE EXISITNG VIEW ------------------------------------
 
 		DROP VIEW TEMP_VIEW_FULL_DATA
 
+	------------------------------------------  🔴 1. Updatable View----------------------------------------------------------------------------------------------------
+	----------------------------------------- An Updatable View is a View through which you can modify the data in the underlying/base table using-----------------------
+
+		SELECT * FROM TEMP_TESING  
+
+		DROP VIEW IF EXISTS UPDATE_TESTING -------- IF I UPDATE THE VIEW LOCATION IT WILL CHANGED ALSO MAIN TABLE DATA
+	    CREATE VIEW UPDATE_TESTING
+		AS
+			SELECT
+			    CUSTOMERID,
+				FIRSTNAME,
+				LASTNAME,
+				CITY,
+				COUNTRY,
+				DEPARTMENT,
+				ANNUALSALARY,
+				STATUS,
+				SOURCESYSTEM
+			FROM TEMP_TESING
+
+		SELECT * FROM TEMP_TESING
+		SELECT * FROM UPDATE_TESTING
+
+		UPDATE UPDATE_TESTING SET FIRSTNAME = 'HARIHARAN' WHERE CUSTOMERID = 101 ----------------------- IF I UPDATE THE VIEW LOCATION IT WILL CHANGED ALSO MAIN TABLE DATA
 
 	SELECT * FROM DEPARTMENTS_WINDOWS 
 	SELECT * FROM EMPLOYEES_WINDOWS
