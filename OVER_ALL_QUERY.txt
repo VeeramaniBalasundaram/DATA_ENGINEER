@@ -12865,6 +12865,125 @@ DROP TABLE IF EXISTS #TEMP_TABLE_INTO_CHECKING; ----------- THIS QUERY IS USED F
 
 		UPDATE UPDATE_TESTING SET FIRSTNAME = 'HARIHARAN' WHERE CUSTOMERID = 101 ----------------------- IF I UPDATE THE VIEW LOCATION IT WILL CHANGED ALSO MAIN TABLE DATA
 
+	------------------------------------------🔴 INSERT Through View-----------------------------------------------------------------------------------------------------
+
+	---------------INSERT through View means inserting a new row into the View, which inserts that row into the underlying/base table.------------------------------------
+		
+		SELECT * FROM TEMP_TESING  
+
+		DROP VIEW IF EXISTS INSERT_TESTING -------- INSERT THE NEW VALUE IN VIEW TABLE, AND THAT WILL BE SHOWED IN MAIN TABLE ASO 
+	    CREATE VIEW TEMP_INSERT_TESTING
+		AS
+			SELECT
+			    CUSTOMERID,
+				FIRSTNAME,
+				LASTNAME,
+				CITY,
+				COUNTRY,
+				DEPARTMENT,
+				ANNUALSALARY,
+				STATUS,
+				SOURCESYSTEM
+			FROM TEMP_TESING
+
+		INSERT INTO TEMP_INSERT_TESTING
+		( 
+				CUSTOMERID,
+				FIRSTNAME,
+				LASTNAME,
+				CITY,
+				COUNTRY,
+				DEPARTMENT,
+				ANNUALSALARY,
+				STATUS,
+				SOURCESYSTEM
+		)
+		VALUES 
+		( 
+				11 , 
+				'VEERAMANI', 
+				'BALASUNDARAM', 
+				'THANJAVUR', 
+				'INDIA' , 
+				'AWS_DATA_ENGINEER' , 
+				100000, 
+				'ACTIVE' , 
+				'ERP'
+		)
+	----------------------------------------------------------------🔴 Next: DELETE Through View-------------------------------------------------------------
+
+	----------------------------------------------------------------DELETE from View → the corresponding row is deleted from the underlying/base table.-------
+
+		SELECT * FROM TEMP_TESING  
+
+		DROP VIEW IF EXISTS TEMP_DELETE_TESTING -------- INSERT THE NEW VALUE IN VIEW TABLE, AND THAT WILL BE SHOWED IN MAIN TABLE ASO 
+	    CREATE VIEW TEMP_DELETE_TESTING
+		AS
+			SELECT
+			    CUSTOMERID,
+				FIRSTNAME,
+				LASTNAME,
+				CITY,
+				COUNTRY,
+				DEPARTMENT,
+				ANNUALSALARY,
+				STATUS,
+				SOURCESYSTEM
+			FROM TEMP_TESING
+
+
+		DELETE FROM TEMP_DELETE_TESTING WHERE CUSTOMERID = 11 
+
+	---------------------------------------------🔴 View — NOT Updatable: Important Headings------------------------------------------------------------------------
+
+	-----------------------------------🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴 IMPORATNT FOR INTERVIEW NOT UPDATABLE--------------------------------------------------------------
+
+	/*
+		GROUP BY
+		Aggregate Functions — SUM(), AVG(), COUNT(), MIN(), MAX()
+		DISTINCT
+		UNION / UNION ALL
+		Calculated / Derived Columns
+		Complex JOIN Views
+		Subqueries / Complex Query Logic
+		Set Operations
+		Other SQL constructs that prevent direct mapping to a single base-table row
+
+
+	--------------------------------------If the View result cannot be clearly mapped back to a single row in the base table, it generally cannot be directly updated.-----------
+	*/
+
+
+	----------------------------🔴 WITH CHECK OPTION--------------------------------------------------------------------------------------------------------------------------------
+
+	------------------------------WITH CHECK OPTION is used with a View to make sure that any INSERT or UPDATE through the View still satisfies the View's WHERE condition.-------
+
+		SELECT * FROM TEMP_TESING  
+
+		DROP VIEW IF EXISTS TEMP_WITH_CHECK_OPTION -------- INSERT THE NEW VALUE IN VIEW TABLE, AND THAT WILL BE SHOWED IN MAIN TABLE ASO 
+	    CREATE VIEW TEMP_WITH_CHECK_OPTION
+		AS
+			SELECT
+			    CUSTOMERID,
+				FIRSTNAME,
+				LASTNAME,
+				CITY,
+				COUNTRY,
+				DEPARTMENT,
+				ANNUALSALARY,
+				STATUS,
+				SOURCESYSTEM
+			FROM TEMP_TESING
+			WHERE STATUS = 'ACTIVE'
+			WITH CHECK OPTION ---------------- THIS IS CHECK POINT 
+
+		UPDATE TEMP_WITH_CHECK_OPTION SET CITY = 'CHENNAI' WHERE CUSTOMERID = 102  ---------------------- THIS WILL WORK 
+
+		UPDATE TEMP_WITH_CHECK_OPTION SET STATUS = 'INACTIVE' WHERE CUSTOMERID = 102  --------------- THIS WILL NOT WORK BECAUSE WITH OPTION MENTION ONLY ACTIVE (SO COULD NOT UPDATEHE INACTIVE-----
+
+
+
+
 	SELECT * FROM DEPARTMENTS_WINDOWS 
 	SELECT * FROM EMPLOYEES_WINDOWS
 	SELECT * FROM SALES_WINDOWS
@@ -12877,4 +12996,8 @@ DROP TABLE IF EXISTS #TEMP_TABLE_INTO_CHECKING; ----------- THIS QUERY IS USED F
 	SELECT * FROM TEMP_CASE_SENSITIVE_LOGICS
 	SELECT * FROM TEMP_CTE_LOGICS_CHECKING
 	SELECT * FROM TEMP_VIEW_WINDOWS_FUNCTIONS
+	SELECT * FROM TEMP_INSERT_TESTING
+	SELECT * FROM TEMP_DELETE_TESTING
+	SELECT * FROM TEMP_WITH_CHECK_OPTION
+
 
