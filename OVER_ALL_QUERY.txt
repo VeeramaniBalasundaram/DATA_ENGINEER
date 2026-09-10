@@ -12982,6 +12982,68 @@ DROP TABLE IF EXISTS #TEMP_TABLE_INTO_CHECKING; ----------- THIS QUERY IS USED F
 		UPDATE TEMP_WITH_CHECK_OPTION SET STATUS = 'INACTIVE' WHERE CUSTOMERID = 102  --------------- THIS WILL NOT WORK BECAUSE WITH OPTION MENTION ONLY ACTIVE (SO COULD NOT UPDATEHE INACTIVE-----
 
 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	------------------------------------------------------WITH CHECK OPTION ((((((((((INSERT))))))))))))))))))))))------------------------------------------------------------------------------------------
+
+	SELECT * FROM TEMP_TESING  
+
+		DROP VIEW IF EXISTS TEMP_WITH_CHECK_OPTION_INSERT-------- INSERT THE NEW VALUE IN VIEW TABLE, AND THAT WILL BE SHOWED IN MAIN TABLE ASO 
+	    CREATE VIEW TEMP_WITH_CHECK_OPTION_INSERT
+		AS
+			SELECT
+			    CUSTOMERID,
+				FIRSTNAME,
+				LASTNAME,
+				CITY,
+				COUNTRY,
+				DEPARTMENT,
+				ANNUALSALARY,
+				STATUS,
+				SOURCESYSTEM
+			FROM TEMP_TESING
+			WHERE STATUS = 'ACTIVE'
+			WITH CHECK OPTION 
+
+		INSERT INTO TEMP_WITH_CHECK_OPTION_INSERT --------------------- INACTIVE RECORDS NOT INSERT TO TABLE BECAUSE WE USED ONLY ACTIVE (WITH CHECK OPTION)
+		( 
+				CUSTOMERID,
+				FIRSTNAME,
+				LASTNAME,
+				CITY,
+				COUNTRY,
+				DEPARTMENT,
+				ANNUALSALARY,
+				STATUS,
+				SOURCESYSTEM
+		)
+		VALUES 
+		( 
+				 12, 
+				'VEERAMANI', 
+				'BALASUNDARAM', 
+				'THANJAVUR', 
+				'INDIA' , 
+				'AWS_DATA_ENGINEER' , 
+				 100000, 
+				'INACTIVE' ,  --------------------- INACTIVE RECORDS NOT INSERT TO TABLE BECAUSE WE USED ONLY ACTIVE (WITH CHECK OPTION)
+				'ERP'
+		)
+
+
+	-----------------------------------------------------------------------🔐 View Security — Learning Plan-------------------------------------------------------------
+	/*
+
+				| **VIEW**                 | **TEMPORARY TABLE**        | **CTE**                               |
+			| ------------------------ | -------------------------- | ------------------------------------- |
+			| Reusable saved query     | Temporary stored data      |  Temporary query logic                |
+			| Exists until `DROP VIEW` | Exists for session/process |  Exists only for **one SQL statement  |
+			| CREATE VIEW`             | CREATE TABLE #Temp         |  WITH CTE                             |
+			| VIEW = Reuse**           | TEMP = Store & Process     |  CTE = Simplify Query**               |
+
+	*/
+
+
+
 
 
 	SELECT * FROM DEPARTMENTS_WINDOWS 
@@ -12999,5 +13061,6 @@ DROP TABLE IF EXISTS #TEMP_TABLE_INTO_CHECKING; ----------- THIS QUERY IS USED F
 	SELECT * FROM TEMP_INSERT_TESTING
 	SELECT * FROM TEMP_DELETE_TESTING
 	SELECT * FROM TEMP_WITH_CHECK_OPTION
+	SELECT * FROM TEMP_WITH_CHECK_OPTION_INSERT
 
 
